@@ -25,3 +25,4 @@ public class StudentController {
     public String createStudent() {
         return "학생 등록 완료";
     }
+}

@@ -1,4 +1,4 @@
-package com.example.UniBridge;
+package com.example.UniBridge.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,9 +11,9 @@ public class MainController {
         return "redirect:/home";
     }
 
-    @GetMapping("/home")
+    @GetMapping("/main")
     public String home() {
-        return "home";
+        return "main page";
     }
 
 }

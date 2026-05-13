@@ -1,4 +1,5 @@
 HELP.md
+.gitignore
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -18,6 +19,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
+application.properties
 .idea
 *.iws
 *.iml

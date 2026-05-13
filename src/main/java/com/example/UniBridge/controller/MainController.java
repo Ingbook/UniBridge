@@ -11,9 +11,9 @@ public class MainController {
         return "redirect:/home";
     }
 
-    @GetMapping("/main")
+    @GetMapping("/home")
     public String home() {
-        return "main page";
+        return "home";
     }
 
 }

@@ -16,6 +16,4 @@ public class MainController {
         return "main page";
     }
 
-    @GetMapping("/")
-
 }

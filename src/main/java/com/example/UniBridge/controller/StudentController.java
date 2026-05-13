@@ -24,5 +24,4 @@ public class StudentController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청")
     public String createStudent() {
         return "학생 등록 완료";
-
     }

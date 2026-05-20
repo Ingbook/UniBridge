@@ -1,4 +1,4 @@
-현package com.example.UniBridge.common;
+package com.example.UniBridge.common;
 
 import com.example.UniBridge.answer.Answer;
 import com.example.UniBridge.answer.AnswerRepository;

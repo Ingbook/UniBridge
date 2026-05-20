@@ -1,639 +1,193 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unibridge 메인 - 국립공주대학교</title>
+    <title th:text="${pageTitle} ?: 'Unibridge 메인 - 국립공주대학교'">Unibridge 메인 - 국립공주대학교</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        :root {
-            /* KNU Colors */
-            --knu-green: #166534;
-            --knu-teal: #4eb2bc;
-            --knu-teal-hover: #3a9aa3;
-            --knu-blue: #284b8f;
-            --knu-blue-hover: #1e3a73;
-
-            /* Unibridge Colors */
-            --uni-purple: #8b5cf6;
-            --uni-purple-hover: #7c3aed;
-
-            /* UI Colors */
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-dark: #1e293b;
-            --text-gray: #64748b;
-            --border-light: #e2e8f0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Pretendard', sans-serif;
-        }
-
-        body {
-            /* 메인페이지 배경: 밝고 깨끗한 톤, 살짝 퍼플/그린 그라데이션 */
-            background: linear-gradient(135deg, #f8fafc 0%, #f3e8ff 50%, #e0f2fe 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: var(--text-dark);
-            overflow-x: hidden;
-        }
-
-        /* Navbar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 4rem;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.4);
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 100;
-        }
-
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .nav-brand .uni {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--uni-purple);
-            letter-spacing: -0.02em;
-        }
-
-        .nav-brand .cross {
-            color: #94a3b8;
-            font-size: 1rem;
-        }
-
-        .nav-brand .knu-brand {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-brand .knu-emblem {
-            width: 34px;
-            height: 34px;
-        }
-
-        .nav-brand .knu {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: #1e293b;
-            letter-spacing: -0.05em;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2.5rem;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-dark);
-            font-weight: 600;
-            font-size: 1.05rem;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: var(--uni-purple);
-        }
-
-        /* Hero Section */
-        .hero-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8rem 4rem 4rem 4rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-            gap: 6rem;
-        }
-
-        .hero-content {
-            flex: 1;
-            animation: fadeInLeft 0.8s ease-out;
-        }
-
-        /* Custom KNU Arch Logo from User's Mockup */
-        .custom-logo {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: rgba(255,255,255,0.6);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            border: 1px solid rgba(255,255,255,0.8);
-        }
-
-        .custom-logo svg {
-            width: 90px;
-            height: 70px;
-        }
-
-        .custom-logo-text {
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-
-        .custom-logo-text .uni {
-            font-family: 'Times New Roman', Times, serif;
-            color: var(--knu-green);
-            font-size: 1.6rem;
-            font-weight: 400;
-            line-height: 1;
-        }
-
-        .custom-logo-text .knu {
-            font-family: 'Times New Roman', Times, serif;
-            color: var(--knu-green);
-            font-size: 1.2rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-        }
-
-        .hero-title {
-            font-size: 3.8rem;
-            font-weight: 800;
-            line-height: 1.25;
-            margin-bottom: 1.5rem;
-            letter-spacing: -0.03em;
-        }
-
-        .highlight-purple {
-            color: var(--uni-purple);
-        }
-
-        .hero-subtitle {
-            font-size: 1.15rem;
-            color: var(--text-gray);
-            line-height: 1.6;
-            max-width: 85%;
-            word-break: keep-all;
-        }
-
-        /* Login Card Wrapper */
-        .login-wrapper {
-            width: 460px;
-            flex-shrink: 0;
-            animation: fadeInRight 0.8s ease-out;
-        }
-
-        .login-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.15), 0 0 0 1px rgba(0,0,0,0.02);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Tabs */
-        .login-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-light);
-            background: #f8fafc;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 1.2rem 0;
-            background: none;
-            border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-gray);
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-
-        .tab:hover {
-            color: var(--text-dark);
-            background: rgba(139, 92, 246, 0.04);
-        }
-
-        .tab.active {
-            color: var(--uni-purple);
-            background: #ffffff;
-        }
-
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--uni-purple);
-        }
-
-        .tab-content-container {
-            padding: 2.5rem;
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .col-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-
-        .col-header h3 {
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-
-        .col-icon {
-            width: 44px;
-            height: 44px;
-            background: #f1f5f9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #94a3b8;
-        }
-
-        /* Inputs */
-        .input-group {
-            margin-bottom: 1rem;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 1.05rem 1rem;
-            border: 1px solid var(--border-light);
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            outline: none;
-            background-color: #f8fafc;
-        }
-
-        .input-group input:focus {
-            border-color: var(--uni-purple);
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-        }
-
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 1.1rem;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.05rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: white;
-            margin-bottom: 1rem;
-            margin-top: 0.5rem;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-teal {
-            background-color: var(--knu-teal);
-            box-shadow: 0 4px 14px 0 rgba(77, 178, 188, 0.39);
-        }
-        .btn-teal:hover { background-color: var(--knu-teal-hover); }
-
-        .btn-blue {
-            background-color: var(--knu-blue);
-            box-shadow: 0 4px 14px 0 rgba(40, 75, 143, 0.39);
-        }
-        .btn-blue:hover { background-color: var(--knu-blue-hover); }
-
-        .btn-gray {
-            background-color: #94a3b8;
-            padding: 0.8rem;
-            font-size: 0.9rem;
-            margin-bottom: 0;
-            margin-top: 0;
-        }
-        .btn-gray:hover { background-color: #64748b; }
-
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        /* Links */
-        .links {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text-gray);
-        }
-
-        .links a {
-            color: var(--text-gray);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .links a:hover {
-            color: var(--uni-purple);
-            text-decoration: underline;
-        }
-
-        .split-links {
-            justify-content: space-between;
-        }
-
-        /* Help Box inside card */
-        .help-toggle {
-            text-align: center;
-            padding: 1rem;
-            background: #f8fafc;
-            border-top: 1px solid var(--border-light);
-            font-size: 0.85rem;
-        }
-
-        .help-toggle a {
-            color: var(--text-gray);
-            text-decoration: none;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: color 0.2s;
-        }
-
-        .help-toggle a:hover {
-            color: var(--uni-purple);
-        }
-
-        .help-content {
-            display: none;
-            padding: 1.5rem;
-            background: #f1f5f9;
-            border-top: 1px solid var(--border-light);
-            font-size: 0.85rem;
-            color: var(--text-gray);
-            line-height: 1.6;
-        }
-
-        .help-content ul {
-            list-style: none;
-        }
-
-        .help-content li {
-            margin-bottom: 0.5rem;
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .help-content li::before {
-            content: '•';
-            color: var(--knu-teal);
-            font-weight: bold;
-        }
-
-        .cert-info {
-            font-size: 0.85rem;
-            color: var(--text-gray);
-            text-align: center;
-            margin-bottom: 0.5rem;
-        }
-
-        /* Animations */
-        @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeInRight {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .hero-container {
-                flex-direction: column;
-                padding: 8rem 2rem 4rem 2rem;
-                gap: 3rem;
-                text-align: center;
-            }
-            .nav-links { display: none; }
-            .hero-subtitle { margin: 0 auto; }
-            .login-wrapper { width: 100%; max-width: 460px; }
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/login.css}" href="/css/login.css">
 </head>
 <body>
-
-<!-- Navbar -->
 <nav class="navbar">
     <div class="nav-brand">
-        <span class="uni">Unibridge</span>
+        <span class="uni" th:text="${serviceName} ?: 'Unibridge'">Unibridge</span>
         <span class="cross">✕</span>
         <div class="knu-brand">
-            <svg class="knu-emblem" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <svg class="knu-emblem" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <circle cx="50" cy="50" r="48" fill="#ffffff" stroke="#008b46" stroke-width="2.5"/>
                 <circle cx="50" cy="50" r="32" fill="#0f3b8c" stroke="#ffffff" stroke-width="1.5"/>
                 <circle cx="50" cy="50" r="33.5" fill="none" stroke="#008b46" stroke-width="1"/>
-
                 <defs>
-                    <path id="arc-top" d="M 14,50 A 36,36 0 0,1 86,50" />
-                    <path id="arc-bot" d="M 14,50 A 36,36 0 0,0 86,50" />
+                    <path id="arc-top" d="M 14,50 A 36,36 0 0,1 86,50"/>
+                    <path id="arc-bot" d="M 14,50 A 36,36 0 0,0 86,50"/>
                 </defs>
-
                 <text font-family="Arial, sans-serif" font-size="7.5" fill="#008b46" font-weight="bold" letter-spacing="0.5">
                     <textPath href="#arc-top" startOffset="50%" text-anchor="middle">KONGJU NATIONAL UNIVERSITY</textPath>
                 </text>
                 <text font-family="'Pretendard', sans-serif" font-size="10" fill="#008b46" font-weight="bold" letter-spacing="1.5">
                     <textPath href="#arc-bot" startOffset="50%" text-anchor="middle">국립공주대학교</textPath>
                 </text>
-
                 <circle cx="9" cy="50" r="1.5" fill="#008b46"/>
                 <circle cx="91" cy="50" r="1.5" fill="#008b46"/>
-
                 <path d="M 50 24 L 72 41 L 28 41 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
                 <path d="M 50 29 L 63 39 L 37 39 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
-
                 <text x="50" y="58" font-family="'Times New Roman', serif" font-size="16" fill="#ffffff" font-weight="bold" text-anchor="middle">KNU</text>
                 <line x1="34" y1="63" x2="66" y2="63" stroke="#ffffff" stroke-width="1"/>
                 <text x="50" y="73" font-family="Arial, sans-serif" font-size="7.5" fill="#ffffff" text-anchor="middle" font-weight="bold">1948</text>
             </svg>
-            <span class="knu">국립공주대학교</span>
+            <span class="knu" th:text="${universityName} ?: '국립공주대학교'">국립공주대학교</span>
         </div>
     </div>
     <div class="nav-links">
-        <a href="#"></a>
-        <a href="#">회원가입</a>
-        <a href="#">내 정보 </a>
+        <a th:href="@{/}" href="/">홈</a>
+        <a th:href="@{/register}" href="/register">회원가입</a>
+        <a th:href="@{/mypage}" href="/mypage">내 정보</a>
     </div>
 </nav>
 
-<!-- Main Content -->
 <main class="hero-container">
-
-    <!-- Left: Branding & Hero -->
-    <div class="hero-content">
-        <!-- Custom Green Logo -->
+    <section class="hero-content" aria-labelledby="hero-title">
         <div class="custom-logo">
-            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Pillars -->
+            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <rect x="20" y="25" width="10" height="50" fill="none" stroke="var(--knu-green)" stroke-width="3"/>
                 <rect x="15" y="20" width="20" height="5" fill="var(--knu-green)"/>
                 <rect x="15" y="75" width="20" height="5" fill="var(--knu-green)"/>
-
                 <rect x="70" y="25" width="10" height="50" fill="none" stroke="var(--knu-green)" stroke-width="3"/>
                 <rect x="65" y="20" width="20" height="5" fill="var(--knu-green)"/>
                 <rect x="65" y="75" width="20" height="5" fill="var(--knu-green)"/>
-
-                <!-- Crossing Bridge (N shape) -->
                 <path d="M 25 35 L 75 65" stroke="var(--knu-green)" stroke-width="3"/>
                 <path d="M 25 65 L 75 35" stroke="var(--knu-green)" stroke-width="3"/>
             </svg>
             <div class="custom-logo-text">
-                <div class="uni">UniBridge</div>
-                <div class="knu">KNU 1948</div>
+                <div class="uni" th:text="${serviceName} ?: 'UniBridge'">UniBridge</div>
+                <div class="knu" th:text="${logoSubtitle} ?: 'KNU 1948'">KNU 1948</div>
             </div>
         </div>
 
-        <h1 class="hero-title">
-            공주대 학우들의<br>
-            성공적인 내일을 위한<br>
-            <span class="highlight-purple">단 하나의 브릿지</span>
+        <h1 class="hero-title" id="hero-title">
+            <span th:text="${heroLine1} ?: '공주대 학우들의'">공주대 학우들의</span><br>
+            <span th:text="${heroLine2} ?: '성공적인 내일을 위한'">성공적인 내일을 위한</span><br>
+            <span class="highlight-purple" th:text="${heroHighlight} ?: '단 하나의 브릿지'">단 하나의 브릿지</span>
         </h1>
-        <p class="hero-subtitle">
+        <p class="hero-subtitle" th:text="${heroSubtitle} ?: '공주대학교 통합 계정 하나로 Unibridge의 모든 맞춤형 취업 정보를 확인하세요. 전자정부법에 의거하여 안전하게 연계 로그인됩니다.'">
             공주대학교 통합 계정 하나로 Unibridge의 모든 맞춤형 취업 정보를 확인하세요. 전자정부법에 의거하여 안전하게 연계 로그인됩니다.
         </p>
-    </div>
+    </section>
 
-    <!-- Right: Login Box -->
-    <div class="login-wrapper">
+    <section class="login-wrapper" aria-label="로그인">
         <div class="login-card">
-
-            <!-- Tabs -->
-            <div class="login-tabs">
-                <button class="tab active" onclick="switchTab('general')">일반로그인</button>
-                <button class="tab" onclick="switchTab('2fa')">2차인증</button>
-                <button class="tab" onclick="switchTab('cert')">인증서</button>
+            <div class="login-tabs" role="tablist">
+                <button type="button" class="tab active" th:class="${activeTab == null or activeTab == 'general'} ? 'tab active' : 'tab'" role="tab" onclick="switchTab('general', this)">일반로그인</button>
+                <button type="button" class="tab" th:class="${activeTab == '2fa'} ? 'tab active' : 'tab'" role="tab" onclick="switchTab('2fa', this)">2차인증</button>
+                <button type="button" class="tab" th:class="${activeTab == 'cert'} ? 'tab active' : 'tab'" role="tab" onclick="switchTab('cert', this)">인증서</button>
             </div>
 
             <div class="tab-content-container">
-                <!-- Tab 1: 일반로그인 -->
-                <div class="tab-content active" id="tab-general">
+                <div class="message message-error" th:if="${param.error}" th:text="${loginErrorMessage} ?: '아이디 또는 비밀번호를 확인하세요.'">
+                    아이디 또는 비밀번호를 확인하세요.
+                </div>
+                <div class="message message-success" th:if="${param.logout}" th:text="${logoutMessage} ?: '로그아웃되었습니다.'">
+                    로그아웃되었습니다.
+                </div>
+
+                <div class="tab-content active" th:class="${activeTab == null or activeTab == 'general'} ? 'tab-content active' : 'tab-content'" id="tab-general" role="tabpanel">
                     <div class="col-header">
                         <h3>일반로그인</h3>
-                        <div class="col-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <div class="col-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
                         </div>
                     </div>
-                    <form onsubmit="event.preventDefault(); alert('Unibridge 메인 연계 로그인 테스트입니다.');">
+                    <form th:action="@{/login}" action="/login" method="post">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <div class="input-group">
-                            <input type="text" placeholder="학번 또는 사번" required>
+                            <input type="text" name="username" th:value="${username}" placeholder="학번 또는 사번" autocomplete="username" required>
                         </div>
                         <div class="input-group">
-                            <input type="password" placeholder="비밀번호" required>
+                            <input type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required>
                         </div>
                         <button type="submit" class="btn btn-teal">일반 로그인</button>
                     </form>
                     <div class="links">
-                        <a href="#">아이디 찾기</a>
+                        <a th:href="@{/find-id}" href="/find-id">아이디 찾기</a>
                         <span>|</span>
-                        <a href="#">비밀번호 변경</a>
+                        <a th:href="@{/change-password}" href="/change-password">비밀번호 변경</a>
                     </div>
                 </div>
 
-                <!-- Tab 2: 2차인증 -->
-                <div class="tab-content" id="tab-2fa">
+                <div class="tab-content" th:class="${activeTab == '2fa'} ? 'tab-content active' : 'tab-content'" id="tab-2fa" role="tabpanel">
                     <div class="col-header">
                         <h3>2차인증로그인</h3>
-                        <div class="col-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <div class="col-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
                         </div>
                     </div>
-                    <form onsubmit="event.preventDefault();">
+                    <form th:action="@{/login/2fa}" action="/login/2fa" method="post">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <div class="input-group">
-                            <input type="text" placeholder="아이디" required>
+                            <input type="text" name="username" th:value="${username}" placeholder="아이디" autocomplete="username" required>
                         </div>
                         <div class="input-group">
-                            <input type="password" placeholder="비밀번호" required>
+                            <input type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required>
                         </div>
-                        <button type="button" class="btn btn-blue">2차인증 로그인</button>
+                        <button type="submit" class="btn btn-blue">2차인증 로그인</button>
                     </form>
                     <div class="links split-links">
-                        <a href="#">[ 2차인증 사용방법 ]</a>
-                        <a href="#" style="display: flex; align-items: center; gap: 4px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <a th:href="@{/help/2fa}" href="/help/2fa">[ 2차인증 사용방법 ]</a>
+                        <a class="inline-icon-link" th:href="@{/qr-code}" href="/qr-code">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
                             QR코드
                         </a>
                     </div>
                 </div>
 
-                <!-- Tab 3: 인증서 -->
-                <div class="tab-content" id="tab-cert">
+                <div class="tab-content" th:class="${activeTab == 'cert'} ? 'tab-content active' : 'tab-content'" id="tab-cert" role="tabpanel">
                     <div class="col-header">
                         <h3>인증서로그인</h3>
-                        <div class="col-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <div class="col-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-teal">공동인증서 로그인</button>
+                    <form th:action="@{/login/certificate}" action="/login/certificate" method="post">
+                        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn btn-teal">공동인증서 로그인</button>
+                    </form>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-gray">인증서 등록</button>
-                        <button type="button" class="btn btn-gray">모듈 재설치</button>
+                        <a th:href="@{/certificate/register}" href="/certificate/register" class="btn btn-gray">인증서 등록</a>
+                        <a th:href="@{/certificate/module}" href="/certificate/module" class="btn btn-gray">모듈 재설치</a>
                     </div>
-                    <p class="cert-info" style="margin-top: 1rem;">인증서 등록 후 이용하실 수 있습니다.</p>
+                    <p class="cert-info">인증서 등록 후 이용하실 수 있습니다.</p>
 
-                    <div class="links split-links" style="margin-top: 1rem;">
-                        <a href="#">[인증서 사용방법]</a>
-                        <a href="#">[갱신 절차]</a>
+                    <div class="links split-links cert-links">
+                        <a th:href="@{/help/certificate}" href="/help/certificate">[인증서 사용방법]</a>
+                        <a th:href="@{/certificate/renewal}" href="/certificate/renewal">[갱신 절차]</a>
                     </div>
                 </div>
             </div>
 
-            <!-- Help Toggle -->
             <div class="help-toggle">
-                <a href="#" onclick="event.preventDefault(); toggleHelp();">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <a href="#" onclick="toggleHelp(event);" aria-controls="helpBox">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
                     로그인 도움말 보기
                 </a>
             </div>
 
-            <!-- Help Content -->
             <div class="help-content" id="helpBox">
                 <ul>
                     <li><strong>포털:</strong> 교직원(정보시스템 이용자)은 공동인증서 또는 2차인증 필수</li>
@@ -643,30 +197,10 @@
                     <li>아이디/비번 변경은 본인 명의 휴대폰만 가능</li>
                 </ul>
             </div>
-
         </div>
-    </div>
+    </section>
 </main>
 
-<script>
-    function switchTab(tabId) {
-        // Remove active class from all tabs and contents
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-        // Add active class to clicked tab and corresponding content
-        event.currentTarget.classList.add('active');
-        document.getElementById('tab-' + tabId).classList.add('active');
-    }
-
-    function toggleHelp() {
-        const helpBox = document.getElementById('helpBox');
-        if (helpBox.style.display === 'block') {
-            helpBox.style.display = 'none';
-        } else {
-            helpBox.style.display = 'block';
-        }
-    }
-</script>
+<script th:src="@{/js/login.js}" src="/js/login.js"></script>
 </body>
 </html>

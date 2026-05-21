@@ -28,6 +28,7 @@ public class CertificationController {
     @GetMapping("/api/certifications")
     @Operation(summary = "자격증 목록 조회", description = "전체 자격증 목록을 category, name 오름차순으로 조회합니다.")
     @ApiResponse(responseCode = "200", description = "자격증 목록 조회 성공")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<List<CertificationResponse>> getCertifications() {
         return BaseResponse.success("요청 성공", certificationService.getCertifications());
     }
@@ -35,6 +36,7 @@ public class CertificationController {
     @GetMapping("/api/users/me/certifications")
     @Operation(summary = "내 보유 자격증 목록 조회", description = "userId=1 기준 보유 자격증 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "보유 자격증 목록 조회 성공")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<List<UserCertificationResponse>> getMyCertifications() {
         return BaseResponse.success("요청 성공", certificationService.getMyCertifications());
     }
@@ -42,6 +44,8 @@ public class CertificationController {
     @PostMapping("/api/users/me/certifications")
     @Operation(summary = "내 보유 자격증 등록", description = "userId=1 기준 보유 자격증을 등록합니다.")
     @ApiResponse(responseCode = "200", description = "보유 자격증 등록 성공")
+    @ApiResponse(responseCode = "400", description = "존재하지 않는 자격증 또는 이미 등록된 자격증")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<UserCertificationResponse> addMyCertification(@RequestBody UserCertificationRequest request) {
         return BaseResponse.success("보유 자격증 등록 성공", certificationService.addMyCertification(request));
     }
@@ -49,6 +53,7 @@ public class CertificationController {
     @DeleteMapping("/api/users/me/certifications/{certificationId}")
     @Operation(summary = "내 보유 자격증 삭제", description = "userId=1 기준 보유 자격증을 삭제합니다.")
     @ApiResponse(responseCode = "200", description = "보유 자격증 삭제 성공")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<Void> deleteMyCertification(@PathVariable Long certificationId) {
         certificationService.deleteMyCertification(certificationId);
         return BaseResponse.success("보유 자격증 삭제 성공", null);

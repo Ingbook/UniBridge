@@ -27,6 +27,8 @@ public class AnalysisController {
     @PostMapping("/gpa-certification")
     @Operation(summary = "학점 및 자격증 기반 분석 실행", description = "학점과 보유 자격증 점수로 기업 평균 점수와 비교합니다.")
     @ApiResponse(responseCode = "200", description = "학점 및 자격증 기반 분석 성공")
+    @ApiResponse(responseCode = "400", description = "잘못된 요청, 학점 정보 미등록 또는 존재하지 않는 기업")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<AnalysisReportResponse> analyzeGpaAndCertification(
             @RequestBody GpaCertificationAnalysisRequest request
     ) {
@@ -36,6 +38,7 @@ public class AnalysisController {
     @GetMapping("/me")
     @Operation(summary = "내 분석 결과 목록 조회", description = "userId=1 기준 분석 결과 목록을 createdAt 내림차순으로 조회합니다.")
     @ApiResponse(responseCode = "200", description = "분석 결과 목록 조회 성공")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<List<AnalysisReportResponse>> getMyAnalysisReports() {
         return BaseResponse.success("요청 성공", analysisService.getMyAnalysisReports());
     }
@@ -43,6 +46,8 @@ public class AnalysisController {
     @GetMapping("/{analysisId}")
     @Operation(summary = "분석 결과 상세 조회", description = "특정 분석 결과 상세 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "분석 결과 조회 성공")
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 분석 결과")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<AnalysisReportResponse> getAnalysisReport(@PathVariable Long analysisId) {
         return BaseResponse.success("요청 성공", analysisService.getAnalysisReport(analysisId));
     }

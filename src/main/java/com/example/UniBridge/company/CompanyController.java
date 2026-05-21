@@ -1,6 +1,6 @@
 package com.example.UniBridge.company;
 
-import com.example.UniBridge.common.BaseResponse;
+import com.example.UniBridge.common.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

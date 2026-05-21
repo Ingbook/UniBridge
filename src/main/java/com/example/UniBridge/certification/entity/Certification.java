@@ -1,5 +1,6 @@
-package com.example.UniBridge.company;
+package com.example.UniBridge.certification.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,25 +12,27 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "company")
+@Table(name = "certifications")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Company {
+public class Certification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
-    private String industry;
-    private String mainJobRole;
-    private Integer averageScore;
+    private String category;
+    private Integer score;
+
+    @Column(length = 1000)
+    private String description;
 
     @Builder
-    public Company(String name, String industry, String mainJobRole, Integer averageScore) {
+    public Certification(String name, String category, Integer score, String description) {
         this.name = name;
-        this.industry = industry;
-        this.mainJobRole = mainJobRole;
-        this.averageScore = averageScore;
+        this.category = category;
+        this.score = score;
+        this.description = description;
     }
 }

@@ -3,9 +3,12 @@ package com.example.UniBridge.analysis.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.UniBridge.analysis.dto.AiAnalysisResult;
 import com.example.UniBridge.analysis.dto.AnalysisReportResponse;
 import com.example.UniBridge.analysis.dto.GpaCertificationAnalysisRequest;
 import com.example.UniBridge.analysis.entity.AnalysisReport;
@@ -42,6 +45,9 @@ class AnalysisServiceTest {
 
     @Mock
     private UserCertificationRepository userCertificationRepository;
+
+    @Mock
+    private LocalAiAnalysisService localAiAnalysisService;
 
     @InjectMocks
     private AnalysisService analysisService;
@@ -113,6 +119,8 @@ class AnalysisServiceTest {
         when(specificationService.getMySpecificationEntityForAnalysis()).thenReturn(specification);
         when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
         when(userCertificationRepository.findByUserId(1L)).thenReturn(userCertifications);
+        when(localAiAnalysisService.analyzeSpec(84, 50, 70, 85, 15, userCertifications))
+                .thenReturn(aiResult(5, "AI 분석 요약입니다.", "정보처리기사 기반 프로젝트를 추가하세요."));
         when(analysisReportRepository.save(any(AnalysisReport.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -124,8 +132,68 @@ class AnalysisServiceTest {
         assertThat(response.getGpaScore()).isEqualTo(84);
         assertThat(response.getCertificationScore()).isEqualTo(50);
         assertThat(response.getTotalScore()).isEqualTo(70);
-        assertThat(response.getGapScore()).isEqualTo(15);
+        assertThat(response.getAiAdjustmentScore()).isEqualTo(5);
+        assertThat(response.getAiAdjustedScore()).isEqualTo(75);
+        assertThat(response.getGapScore()).isEqualTo(10);
+        assertThat(response.getSummary()).contains("AI 분석 요약입니다.", "정보처리기사 기반 프로젝트를 추가하세요.");
+        printAiAnalysisResult("AI 정상 응답", response);
         verify(analysisReportRepository).save(any(AnalysisReport.class));
+    }
+
+    @Test
+    void analyzeGpaAndCertification_limitsAdjustmentScoreToTen_whenAiReturnsGreaterThanTen() {
+        List<UserCertification> userCertifications = List.of(userCertification(certification("정보처리기사", 30)));
+        prepareAnalysis(userCertifications);
+        when(localAiAnalysisService.analyzeSpec(84, 30, 62, 85, 23, userCertifications))
+                .thenReturn(aiResult(25, "가산 요인이 있습니다.", "관련 경험을 정리하세요."));
+        when(analysisReportRepository.save(any(AnalysisReport.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AnalysisReportResponse response = analysisService.analyzeGpaAndCertification(analysisRequest(1L));
+
+        assertThat(response.getTotalScore()).isEqualTo(62);
+        assertThat(response.getAiAdjustmentScore()).isEqualTo(10);
+        assertThat(response.getAiAdjustedScore()).isEqualTo(72);
+        assertThat(response.getGapScore()).isEqualTo(13);
+        printAiAnalysisResult("AI 보정 점수 상한 제한", response);
+    }
+
+    @Test
+    void analyzeGpaAndCertification_limitsAdjustmentScoreToMinusTen_whenAiReturnsLessThanMinusTen() {
+        List<UserCertification> userCertifications = List.of(userCertification(certification("정보처리기사", 30)));
+        prepareAnalysis(userCertifications);
+        when(localAiAnalysisService.analyzeSpec(84, 30, 62, 85, 23, userCertifications))
+                .thenReturn(aiResult(-30, "보완이 필요합니다.", "자격증을 추가하세요."));
+        when(analysisReportRepository.save(any(AnalysisReport.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AnalysisReportResponse response = analysisService.analyzeGpaAndCertification(analysisRequest(1L));
+
+        assertThat(response.getAiAdjustmentScore()).isEqualTo(-10);
+        assertThat(response.getAiAdjustedScore()).isEqualTo(52);
+        assertThat(response.getGapScore()).isEqualTo(33);
+        printAiAnalysisResult("AI 보정 점수 하한 제한", response);
+    }
+
+    @Test
+    void analyzeGpaAndCertification_usesFallbackSummary_whenAiCallFails() {
+        List<UserCertification> userCertifications = List.of(userCertification(certification("정보처리기사", 30)));
+        prepareAnalysis(userCertifications);
+        doThrow(new RuntimeException("ollama unavailable"))
+                .when(localAiAnalysisService)
+                .analyzeSpec(eq(84), eq(30), eq(62), eq(85), eq(23), eq(userCertifications));
+        when(analysisReportRepository.save(any(AnalysisReport.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AnalysisReportResponse response = analysisService.analyzeGpaAndCertification(analysisRequest(1L));
+
+        assertThat(response.getAiAdjustmentScore()).isZero();
+        assertThat(response.getAiAdjustedScore()).isEqualTo(62);
+        assertThat(response.getGapScore()).isEqualTo(23);
+        assertThat(response.getSummary())
+                .contains("목표 기업 평균 점수보다 낮습니다. 학점 또는 자격증 보완이 필요합니다.")
+                .contains("기본 점수 기준으로 부족한 항목을 보완해 주세요.");
+        printAiAnalysisResult("AI 호출 실패 fallback", response);
     }
 
     @Test
@@ -170,6 +238,38 @@ class AnalysisServiceTest {
                 .userId(1L)
                 .certification(certification)
                 .build();
+    }
+
+    private void prepareAnalysis(List<UserCertification> userCertifications) {
+        when(specificationService.getMySpecificationEntityForAnalysis()).thenReturn(specification("3.8", "4.5"));
+        when(companyRepository.findById(1L)).thenReturn(Optional.of(company("TechCorp", 85)));
+        when(userCertificationRepository.findByUserId(1L)).thenReturn(userCertifications);
+    }
+
+    private AiAnalysisResult aiResult(Integer adjustmentScore, String summary, String recommendation) {
+        return AiAnalysisResult.builder()
+                .adjustmentScore(adjustmentScore)
+                .summary(summary)
+                .recommendation(recommendation)
+                .build();
+    }
+
+    private void printAiAnalysisResult(String testCase, AnalysisReportResponse response) {
+        System.out.println("""
+                [AnalysisServiceTest] %s
+                - baseTotalScore: %d
+                - aiAdjustmentScore: %d
+                - aiAdjustedScore: %d
+                - finalGapScore: %d
+                - summary: %s
+                """.formatted(
+                testCase,
+                response.getTotalScore(),
+                response.getAiAdjustmentScore(),
+                response.getAiAdjustedScore(),
+                response.getGapScore(),
+                response.getSummary()
+        ));
     }
 
     private Company company(String name, Integer averageScore) {

@@ -26,7 +26,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
+@SpringBootTest(properties = "unibridge.ai.enabled=false")
 @AutoConfigureMockMvc
 class UniBridgeApiIntegrationTest {
 
@@ -146,6 +146,8 @@ class UniBridgeApiIntegrationTest {
                 .andExpect(jsonPath("$.data.gpaScore", is(84)))
                 .andExpect(jsonPath("$.data.certificationScore", is(50)))
                 .andExpect(jsonPath("$.data.totalScore", is(70)))
+                .andExpect(jsonPath("$.data.aiAdjustmentScore", is(0)))
+                .andExpect(jsonPath("$.data.aiAdjustedScore", is(70)))
                 .andExpect(jsonPath("$.data.gapScore", is(15)));
 
         mockMvc.perform(get("/api/analysis/me"))

@@ -929,6 +929,382 @@ footer p {
     color: #ffffff;
 }
 
+.analysis-page {
+    background: #ffffff;
+    min-height: 100vh;
+}
+
+.analysis-page .navbar {
+    background: rgba(255, 255, 255, 0.66);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.analysis-page .nav-login-link {
+    padding: 0.58rem 0.95rem;
+    border: 1px solid rgba(139, 92, 246, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--knu-blue);
+    box-shadow: 0 10px 24px rgba(78, 178, 188, 0.12);
+}
+
+.analysis-main {
+    width: min(1540px, calc(100% - 7rem));
+    margin: 0 auto;
+    padding: 2rem 0 5rem;
+}
+
+.analysis-topbar {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 260px);
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.analysis-back {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--knu-blue);
+    text-decoration: none;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.05);
+}
+
+.analysis-banner {
+    min-height: 48px;
+    padding: 0.48rem 1rem;
+    border: 1px dashed rgba(40, 75, 143, 0.28);
+    border-radius: 8px;
+    background: rgba(248, 250, 252, 0.84);
+}
+
+.analysis-banner span,
+.analysis-section-label h2,
+.analysis-profile-card span,
+.analysis-company-card p,
+.analysis-detail-block span {
+    color: #8792a3;
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.analysis-banner strong {
+    display: block;
+    margin-top: 0.12rem;
+    color: var(--knu-blue);
+    font-size: 1rem;
+}
+
+.analysis-hero-grid {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr) 320px;
+    gap: 1.35rem;
+    align-items: stretch;
+}
+
+.analysis-profile-card,
+.analysis-company-card,
+.analysis-ai-chip,
+.analysis-score-card,
+.analysis-report-panel,
+.analysis-info-card,
+.analysis-alumni-card {
+    border: 1px solid rgba(78, 178, 188, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.analysis-profile-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 210px;
+    padding: 1rem;
+}
+
+.analysis-company-art {
+    display: grid;
+    place-items: center;
+    flex: 1;
+    min-height: 140px;
+    border-radius: 7px;
+    background:
+        linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(78, 178, 188, 0.12)),
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.78) 0 46px, rgba(224, 242, 254, 0.62) 46px 92px);
+    color: #64748b;
+}
+
+.analysis-profile-card span {
+    margin-top: 0.8rem;
+    text-align: center;
+}
+
+.analysis-company-stack {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 1rem;
+}
+
+.analysis-company-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 125px;
+    padding: 1.3rem 1.5rem;
+}
+
+.analysis-company-card h1 {
+    margin-top: 0.35rem;
+    color: #172033;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+.analysis-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1rem;
+}
+
+.analysis-meta-row span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.68rem;
+    border: 1px solid rgba(139, 92, 246, 0.26);
+    border-radius: 999px;
+    background: rgba(139, 92, 246, 0.08);
+    color: var(--uni-purple);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.analysis-ai-chip {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 0.85rem;
+    min-height: 70px;
+    padding: 0.9rem 1rem;
+}
+
+.analysis-ai-mark {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(139, 92, 246, 0.32);
+    border-radius: 8px;
+    color: var(--uni-purple);
+    font-weight: 900;
+}
+
+.analysis-ai-chip strong {
+    color: #172033;
+    font-size: 0.95rem;
+}
+
+.analysis-ai-chip p {
+    margin-top: 0.18rem;
+    color: #697386;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.analysis-score-card {
+    min-height: 210px;
+    padding: 1.2rem;
+}
+
+.analysis-score-head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--knu-blue);
+    font-size: 1.1rem;
+}
+
+.analysis-score-head strong {
+    font-size: 1.45rem;
+}
+
+.analysis-score-meter {
+    height: 9px;
+    margin: 0.75rem 0 1rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e8eef6;
+}
+
+.analysis-score-meter span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--uni-purple), var(--knu-teal));
+}
+
+.analysis-score-card dl {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.analysis-score-card dl > div {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.analysis-score-card dt {
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+.analysis-score-card dd {
+    margin-top: 0.28rem;
+    color: #697386;
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.analysis-report-panel {
+    margin-top: 2rem;
+    padding: 1.45rem;
+}
+
+.analysis-section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+.analysis-section-label span {
+    width: 4px;
+    height: 20px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--uni-purple), var(--knu-teal));
+}
+
+.analysis-report-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.95fr) minmax(320px, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+.analysis-chart-card {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 285px;
+    border: 1px dashed rgba(40, 75, 143, 0.28);
+    border-radius: 8px;
+    background: rgba(248, 250, 252, 0.78);
+    color: #8b95a5;
+}
+
+.analysis-chart-axis {
+    position: absolute;
+    width: 2px;
+    height: 96px;
+    background: var(--text-dark);
+}
+
+.analysis-chart-card strong {
+    transform: translateX(-2rem);
+    color: #8b95a5;
+    font-size: 0.82rem;
+}
+
+.analysis-detail-card {
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+    padding: 0.4rem 0;
+}
+
+.analysis-detail-block h3 {
+    margin-top: 0.42rem;
+    color: #172033;
+    font-size: 1.05rem;
+    letter-spacing: 0;
+}
+
+.analysis-detail-block p {
+    margin-top: 0.42rem;
+    color: #697386;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.analysis-more-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: 40px;
+    margin: 1.4rem 0 0 auto;
+    padding: 0.68rem 1.1rem;
+    border: 1px solid #d5dde8;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #172033;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.analysis-info-section,
+.analysis-recommendation-section {
+    margin-top: 2rem;
+}
+
+.analysis-info-grid,
+.analysis-recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.35rem;
+}
+
+.analysis-info-card {
+    min-height: 108px;
+    padding: 1rem 1.2rem;
+}
+
+.analysis-info-card h3 {
+    color: var(--uni-purple);
+    font-size: 0.9rem;
+    letter-spacing: 0;
+}
+
+.analysis-info-card p {
+    margin-top: 0.7rem;
+    color: #172033;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.5;
+}
+
+.analysis-alumni-card {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    min-height: 92px;
+    padding: 0.95rem 1.1rem;
+}
+
 @keyframes fadeInLeft {
     from {
         opacity: 0;
@@ -996,6 +1372,23 @@ footer p {
 
     .home-panel {
         min-height: 255px;
+    }
+
+    .analysis-main {
+        width: min(100% - 2rem, 860px);
+        padding-top: 7.2rem;
+    }
+
+    .analysis-hero-grid {
+        grid-template-columns: 190px minmax(0, 1fr);
+    }
+
+    .analysis-score-card {
+        grid-column: 1 / -1;
+    }
+
+    .analysis-report-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1122,5 +1515,85 @@ footer p {
     .company-avatar {
         width: 46px;
         height: 46px;
+    }
+
+    .analysis-page .navbar {
+        position: sticky;
+    }
+
+    .analysis-main {
+        width: min(100% - 1.25rem, 520px);
+        padding-top: 1.6rem;
+    }
+
+    .analysis-topbar {
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 0.7rem;
+        margin-bottom: 1rem;
+    }
+
+    .analysis-back {
+        width: 42px;
+        height: 42px;
+    }
+
+    .analysis-hero-grid,
+    .analysis-info-grid,
+    .analysis-recommendation-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .analysis-profile-card {
+        min-height: 170px;
+    }
+
+    .analysis-company-art {
+        min-height: 105px;
+    }
+
+    .analysis-company-card {
+        min-height: 116px;
+        padding: 1rem;
+    }
+
+    .analysis-company-card h1 {
+        font-size: 2rem;
+    }
+
+    .analysis-ai-chip {
+        grid-template-columns: 38px minmax(0, 1fr);
+        padding: 0.8rem;
+    }
+
+    .analysis-ai-mark {
+        width: 34px;
+        height: 34px;
+    }
+
+    .analysis-score-card,
+    .analysis-report-panel,
+    .analysis-info-card,
+    .analysis-alumni-card {
+        padding: 0.9rem;
+    }
+
+    .analysis-chart-card {
+        min-height: 220px;
+    }
+
+    .analysis-report-panel,
+    .analysis-info-section,
+    .analysis-recommendation-section {
+        margin-top: 1rem;
+    }
+
+    .analysis-detail-block h3 {
+        font-size: 0.98rem;
+    }
+
+    .analysis-detail-block p,
+    .analysis-info-card p {
+        font-size: 0.88rem;
     }
 }

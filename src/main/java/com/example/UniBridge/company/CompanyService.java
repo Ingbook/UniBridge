@@ -49,6 +49,11 @@ public class CompanyService {
                 .toList();
     }
 
+    public CompanyHomeDto getCompanyById(Long companyId) {
+        Company company = getCompanyEntity(companyId);
+        return CompanyHomeDto.from(company, 0);
+    }
+
     public Company getCompanyEntity(Long companyId) {
         return companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 기업입니다."));

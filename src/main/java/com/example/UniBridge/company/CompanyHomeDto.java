@@ -21,7 +21,7 @@ public class CompanyHomeDto {
                 .category(company.getIndustry())
                 .alumnusCount(alumnusCount != null ? alumnusCount : 0)
                 .location("Seoul")  // Default location - update this if you have location data
-                .detailUrl("/company/" + company.getId())
+                .detailUrl("/analysis/" + company.getId())
                 .build();
     }
 }

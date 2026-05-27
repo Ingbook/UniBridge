@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:title-pattern="$CONTENT_TITLE | $LAYOUT_TITLE" th:text="${companyName} + ' | UniBridge'">Analysis | UniBridge</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" th:href="@{/css/UniBridge.css}" href="/css/UniBridge.css">
+</head>
+<body class="analysis-page">
+<nav class="navbar">
+    <a class="nav-brand" th:href="@{/home}" href="/home">
+        <img th:src="@{/images/unibridge_logo.png}"
+             alt="UniBridge Logo" class="service-logo">
+        <span class="service-name" th:text="${serviceName} ?: 'Unibridge'">Unibridge</span>
+    </a>
+    <div class="nav-links">
+        <a class="nav-login-link" th:href="@{/login}" href="/login">
+            <svg class="nav-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <path d="M10 17l5-5-5-5"></path>
+                <path d="M15 12H3"></path>
+            </svg>
+            <span>학생 로그인</span>
+        </a>
+    </div>
+</nav>
+
+<main class="analysis-main">
+    <section class="analysis-topbar" aria-label="Company summary">
+        <a class="analysis-back" th:href="@{/home}" href="/home" aria-label="Go back home">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 12H5"></path>
+                <path d="M12 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <div class="analysis-banner">
+            <span>기업 분석 리포트</span>
+            <strong th:text="${companyName} ?: 'CloudNet'">CloudNet</strong>
+        </div>
+    </section>
+
+    <section class="analysis-hero-grid">
+        <article class="analysis-profile-card">
+            <div class="analysis-company-art" aria-hidden="true">
+                <!-- Company logo will be inserted here -->
+            </div>
+            <span>기업 로고</span>
+        </article>
+
+        <div class="analysis-company-stack">
+            <article class="analysis-company-card">
+                <div>
+                    <p>기업명</p>
+                    <h1 th:text="${companyName} ?: 'CloudNet'">CloudNet</h1>
+                </div>
+                <div class="analysis-meta-row">
+                    <span th:text="${companyIndustry} ?: 'IT 서비스'">IT 서비스</span>
+                    <span th:text="${alumnusCount} ?: '18명의 동문'">18명의 동문</span>
+                </div>
+            </article>
+
+            <article class="analysis-ai-chip">
+                <span class="analysis-ai-mark">AI</span>
+                <div>
+                    <strong>맞춤 분석 준비 완료</strong>
+                    <p>내 프로필과 기업 데이터를 비교해 강점과 보완점을 정리합니다.</p>
+                </div>
+            </article>
+        </div>
+
+        <aside class="analysis-score-card" aria-label="Short analysis">
+            <div class="analysis-score-head">
+                <span>😊</span>
+                <strong th:text="${matchScore} ?: '82'">82</strong>
+            </div>
+            <div class="analysis-score-meter">
+                <span style="width: 82%"></span>
+            </div>
+            <dl>
+                <div>
+                    <dt>Score description</dt>
+                    <dd>상위 동문 평균과 가까운 준비도입니다.</dd>
+                </div>
+                <div>
+                    <dt>Summarized</dt>
+                    <dd>직무 경험은 좋고 프로젝트 설명 보강이 필요합니다.</dd>
+                </div>
+            </dl>
+        </aside>
+    </section>
+
+    <section class="analysis-report-panel" aria-labelledby="analysis-report-title">
+        <div class="analysis-section-label">
+            <span></span>
+            <h2 id="analysis-report-title">AI Analysis</h2>
+        </div>
+
+        <div class="analysis-report-grid">
+            <article class="analysis-chart-card" aria-label="Preference chart">
+                <div class="analysis-chart-axis"></div>
+                <strong>Preferred?</strong>
+            </article>
+
+            <article class="analysis-detail-card">
+                <div class="analysis-detail-block">
+                    <span>Pros</span>
+                    <h3>지원 직무와 연결되는 경험이 명확합니다.</h3>
+                    <p>주요 프로젝트 경험이 기업의 핵심 직무와 맞닿아 있어 첫 인상은 안정적입니다.</p>
+                </div>
+                <div class="analysis-detail-block">
+                    <span>Pros</span>
+                    <h3>동문 데이터 기준 경쟁력이 있습니다.</h3>
+                    <p>현재 스펙은 평균 이상이지만, 성과 수치와 문제 해결 과정을 더 구체화해야 합니다.</p>
+                </div>
+            </article>
+        </div>
+
+        <a class="analysis-more-button" th:href="@{/api/analysis/me}" href="/api/analysis/me">More details</a>
+    </section>
+
+    <section class="analysis-info-section" aria-labelledby="company-info-title">
+        <div class="analysis-section-label">
+            <span></span>
+            <h2 id="company-info-title">Company Info</h2>
+        </div>
+        <div class="analysis-info-grid">
+            <article class="analysis-info-card">
+                <h3>주요 직무</h3>
+                <p th:text="${mainJobRole} ?: '백엔드 개발, 클라우드 인프라, 데이터 플랫폼'">백엔드 개발, 클라우드 인프라, 데이터 플랫폼</p>
+            </article>
+            <article class="analysis-info-card">
+                <h3>평균 합격 점수</h3>
+                <p th:text="${averageScore} ?: '78점'">78점</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="analysis-recommendation-section" aria-labelledby="recommendation-title">
+        <div class="analysis-section-label">
+            <span></span>
+            <h2 id="recommendation-title">Company Recommendation</h2>
+        </div>
+        <div class="analysis-recommendation-grid">
+            <article class="analysis-alumni-card">
+                <div class="company-avatar" aria-hidden="true">A</div>
+                <div class="company-copy">
+                    <strong>Name</strong>
+                    <small>Alumnus · Backend Engineer</small>
+                </div>
+            </article>
+            <article class="analysis-alumni-card">
+                <div class="company-avatar" aria-hidden="true">B</div>
+                <div class="company-copy">
+                    <strong>Name</strong>
+                    <small>Alumnus · Product Manager</small>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -53,23 +53,108 @@
 
         <div class="analysis-company-stack">
             <article class="analysis-company-card">
-                <div>
-                    <p>기업명</p>
+                <div class="analysis-company-header">
                     <h1 th:text="${companyName} ?: 'CloudNet'">CloudNet</h1>
+                    <div class="analysis-company-meta">
+                        <span class="analysis-meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span th:text="${alumnusCount} ?: '18명'">18명</span>
+                        </span>
+                        <span class="analysis-meta-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span th:text="${location} ?: '서울'">서울</span>
+                        </span>
+                    </div>
                 </div>
                 <div class="analysis-meta-row">
                     <span th:text="${companyIndustry} ?: 'IT 서비스'">IT 서비스</span>
-                    <span th:text="${alumnusCount} ?: '18명의 동문'">18명의 동문</span>
                 </div>
             </article>
 
-            <article class="analysis-ai-chip">
-                <span class="analysis-ai-mark">AI</span>
-                <div>
-                    <strong>맞춤 분석 준비 완료</strong>
-                    <p>내 프로필과 기업 데이터를 비교해 강점과 보완점을 정리합니다.</p>
+            <div class="analysis-alumni-carousel">
+                <button class="analysis-carousel-btn analysis-carousel-prev" id="prevBtn" disabled>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6"></path>
+                    </svg>
+                </button>
+                <div class="analysis-alumni-content">
+                    <h3 class="analysis-alumni-title">동문 선배님들의 프로필을 분석한 점수에요</h3>
+                    <div class="analysis-alumni-list" id="alumniList">
+                        <article class="analysis-alumni-box">
+                            <div class="analysis-alumni-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <span class="analysis-alumni-name">James Kim</span>
+                            <span class="analysis-alumni-score">85점</span>
+                        </article>
+                        <article class="analysis-alumni-box">
+                            <div class="analysis-alumni-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <span class="analysis-alumni-name">Sarah Lee</span>
+                            <span class="analysis-alumni-score">78점</span>
+                        </article>
+                        <article class="analysis-alumni-box">
+                            <div class="analysis-alumni-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <span class="analysis-alumni-name">Michael Park</span>
+                            <span class="analysis-alumni-score">92점</span>
+                        </article>
+                        <article class="analysis-alumni-box">
+                            <div class="analysis-alumni-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <span class="analysis-alumni-name">Emily Choi</span>
+                            <span class="analysis-alumni-score">88점</span>
+                        </article>
+                        <article class="analysis-alumni-box">
+                            <div class="analysis-alumni-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <span class="analysis-alumni-name">David Jung</span>
+                            <span class="analysis-alumni-score">81점</span>
+                        </article>
+                    </div>
                 </div>
-            </article>
+                <button class="analysis-carousel-btn analysis-carousel-next" id="nextBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18l6-6-6-6"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <aside class="analysis-score-card" aria-label="Short analysis">
@@ -162,5 +247,7 @@
         </div>
     </section>
 </main>
+
+<script th:src="@{/js/analysis.js}" src="/js/analysis.js"></script>
 </body>
 </html>

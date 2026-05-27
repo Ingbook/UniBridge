@@ -1,80 +1,124 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Main | UniBridge - 국립공주대학교</title>
+    <title layout:title-pattern="$CONTENT_TITLE | $LAYOUT_TITLE">Home | UniBridge</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" th:href="@{/css/UniBridge.css}" href="/css/UniBridge.css">
+    <script th:src="@{/js/home.js}" src="/js/home.js" defer></script>
 </head>
-<body>
-<!-- Navbar -->
+<body class="home-page">
 <nav class="navbar">
     <a class="nav-brand" th:href="@{/home}" href="/home">
         <img th:src="@{/images/unibridge_logo.png}"
              alt="UniBridge Logo" class="service-logo">
-        <span class="service-name" th:text="${serviceName} ?: 'Unibridge'"></span>
+        <span class="service-name" th:text="${serviceName} ?: 'Unibridge'">Unibridge</span>
     </a>
     <div class="nav-links">
-        <a th:href="@{/login}">학생 로그인</a>
+        <a class="nav-login-link" th:href="@{/login}" href="/login">
+            <svg class="nav-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <path d="M10 17l5-5-5-5"></path>
+                <path d="M15 12H3"></path>
+            </svg>
+            <span>학생 로그인</span>
+        </a>
     </div>
 </nav>
 
-<!-- Main Content -->
-<main>
+<main class="home-main">
+    <header class="home-panel-header">
+        <h1>최근 인기가 많은 기업들이에요</h1>
+    </header>
 
-    <section class="hero-section">
-        <h1>
-            Analyze Your <span>Career Potential</span>
-        </h1>
-
-        <p>
-            UniBridge helps students explore alumni career paths,
-            improve portfolios, and prepare for future industries.
-        </p>
-
-        <button th:onclick="'location.href=\'' + @{/analysis} + '\''">
-            Start Analysis
-        </button>
+    <!--
+        Controller should provide: List<FeaturedCompany> featuredCompanies
+        FeaturedCompany properties: id, name, category, alumnusCount, detailUrl
+    -->
+    <section class="home-panel-grid" aria-label="UniBridge main panels">
+        <a th:each="company : ${featuredCompanies}"
+           th:if="${featuredCompanies != null and !featuredCompanies.isEmpty()}"
+           class="home-panel"
+           th:href="@{${company.detailUrl}}">
+            <div class="home-panel-art" aria-hidden="true">
+                <!-- Optional: Add company logo here -->
+            </div>
+            <p th:text="${company.category}">직군</p>
+            <h2 th:text="${company.name}">Company Name</h2>
+            <div class="home-panel-line"></div>
+            <span th:text="${company.alumnusCount + ' 명의 동문이 근무 중이에요'}">동문 수</span>
+        </a>
     </section>
 
-    <section class="feature-section">
-
-        <div class="feature-card">
-            <h2>AI Career Analysis</h2>
-
-            <p>
-                Get personalized recommendations for certifications,
-                skills, and career preparation.
-            </p>
-        </div>
-
-        <div class="feature-card">
-            <h2>Alumni Statistics</h2>
-
-            <p>
-                Explore real employment trends and career paths
-                from university graduates.
-            </p>
-        </div>
-
-        <div class="feature-card">
-            <h2>Portfolio Management</h2>
-
-            <p>
-                Upload and manage portfolios securely within the university system.
-            </p>
-        </div>
-
+    <section class="home-actions" aria-label="Quick links">
+        <a class="home-action-link action-startup" th:href="@{/startup}" href="/startup">
+            <span class="action-mark" aria-hidden="true"></span>
+            <span>창업자 선배들의 이야기</span>
+        </a>
+        <a class="home-action-link action-board" th:href="@{/board}" href="/board">
+            <span class="action-mark" aria-hidden="true"></span>
+            <span>질문 커뮤니티</span>
+        </a>
+        <a class="home-action-link action-help" th:href="@{/help}" href="/help">
+            <span class="action-mark" aria-hidden="true"></span>
+            <span>서비스 문의하기</span>
+        </a>
     </section>
 
+    <!--
+        Controller should provide: List<RecommendedCompany> recommendedCompanies
+        RecommendedCompany properties: id, name, category, alumnusCount, location, detailUrl
+
+        For pagination:
+        - currentPage (int)
+        - totalPages (int)
+    -->
+    <section class="company-list-shell" id="company-list" aria-label="Scrollable company list">
+        <div class="company-list-heading">
+            <span></span>
+            <h2>추천 기업</h2>
+        </div>
+
+        <div class="company-list">
+            <a th:each="company : ${recommendedCompanies}"
+               th:if="${recommendedCompanies != null and !recommendedCompanies.isEmpty()}"
+               class="company-row"
+               th:href="@{${company.detailUrl}}">
+                <span class="company-avatar"
+                      aria-hidden="true"
+                      th:text="${#strings.substring(company.name, 0, 1)}">C</span>
+                <span class="company-copy">
+                    <span class="company-name-row">
+                        <strong th:text="${company.name}">Company Name</strong>
+                        <span class="company-badge" th:text="${company.category}">Category</span>
+                    </span>
+                    <small>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span th:text="${company.alumnusCount + ' 명의 동문'}">alumnus working</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span th:text="${company.location}">Location</span>
+                    </small>
+                </span>
+                <span class="company-arrow" aria-hidden="true">→</span>
+            </a>
+        </div>
+
+        <nav class="company-list-footer" aria-label="Company list pages">
+            <button th:each="page : ${#numbers.sequence(1, totalPages)}"
+                    type="button"
+                    th:classappend="${page == currentPage ? 'is-active' : ''}"
+                    th:text="${page}">1</button>
+        </nav>
+    </section>
 </main>
-
-<footer>
-    <p>
-        © 2026 UniBridge. All rights reserved.
-    </p>
-</footer>
-
 </body>
 </html>

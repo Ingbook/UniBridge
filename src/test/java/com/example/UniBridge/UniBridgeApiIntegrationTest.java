@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,6 +80,22 @@ class UniBridgeApiIntegrationTest {
                 .andExpect(jsonPath("$.success", is(true)))
                 .andExpect(jsonPath("$.data", hasSize(5)))
                 .andExpect(jsonPath("$.data[0].averageScore", is(92)));
+    }
+
+    @Test
+    void boardPage_rendersCompanyNavigationAndPopularView() throws Exception {
+        mockMvc.perform(get("/board"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Company Q&amp;A board")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("c/TechCorp")));
+
+        mockMvc.perform(get("/board").param("sort", "popular"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Popular questions")));
+
+        mockMvc.perform(get("/board/{companyId}", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("c/TechCorp")));
     }
 
     @Test

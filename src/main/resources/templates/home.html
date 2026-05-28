@@ -112,13 +112,39 @@
             </a>
         </div>
 
-        <nav class="company-list-footer" aria-label="Company list pages">
-            <button th:each="page : ${#numbers.sequence(1, totalPages)}"
-                    type="button"
-                    th:classappend="${page == currentPage ? 'is-active' : ''}"
-                    th:text="${page}">1</button>
+        <nav class="company-list-footer" aria-label="Company list pages" data-page-size="10">
+            <button class="company-page-arrow" id="companyPagePrev" type="button" aria-label="Previous company page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+            </button>
+            <div class="company-page-numbers" id="companyPageNumbers"></div>
+            <button class="company-page-arrow" id="companyPageNext" type="button" aria-label="Next company page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 18l6-6-6-6"></path>
+                </svg>
+            </button>
         </nav>
     </section>
 </main>
+<footer class="site-footer">
+    <div class="site-footer-inner">
+        <a class="site-footer-brand" th:href="@{/home}" href="/home">
+            <img th:src="@{/images/unibridge_logo.png}" src="/images/unibridge_logo.png"
+                 alt="UniBridge Logo">
+            <span>UniBridge</span>
+        </a>
+        <div class="site-footer-copy">
+            <strong>Connecting Seniors, Bridging Your Career.</strong>
+            <span>ⓒ 2026. UniBridge All rights reserved.</span>
+        </div>
+        <nav class="site-footer-links" aria-label="Footer quick links">
+            <a th:href="@{/help}" href="/help">help</a>
+            <a th:href="@{/login}" href="/login">login</a>
+        </nav>
+    </div>
+</footer>
 </body>
 </html>

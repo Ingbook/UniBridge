@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board | UniBridge</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" th:href="@{/css/UniBridge.css}" href="/css/UniBridge.css">
+    <script th:src="@{/js/board.js}" src="/js/board.js" defer></script>
+</head>
+<body class="board-page">
+<nav class="navbar board-navbar">
+    <a class="nav-brand" th:href="@{/home}" href="/home">
+        <img th:src="@{/images/unibridge_logo.png}" src="/images/unibridge_logo.png"
+             alt="UniBridge Logo" class="service-logo">
+        <span class="service-name">Unibridge</span>
+    </a>
+    <div class="nav-links">
+        <a class="nav-login-link" th:href="@{/login}" href="/login">
+            <svg class="nav-login-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <path d="M10 17l5-5-5-5"></path>
+                <path d="M15 12H3"></path>
+            </svg>
+            <span>학생 로그인</span>
+        </a>
+    </div>
+</nav>
+
+<main class="board-shell">
+    <aside class="board-sidebar" aria-label="Board navigation">
+        <nav class="board-quicklinks" aria-label="Quick links">
+            <a class="board-nav-link"
+               th:classappend="${activeCompanyId == null and !popular} ? ' is-active'"
+               th:href="@{/board}" href="/board">
+                <span class="board-link-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 10.5 12 3l9 7.5"></path>
+                        <path d="M5 10v10h14V10"></path>
+                    </svg>
+                </span>
+                <span>Home</span>
+            </a>
+            <a class="board-nav-link"
+               th:classappend="${popular} ? ' is-active'"
+               th:href="@{/board(sort='popular')}" href="/board?sort=popular">
+                <span class="board-link-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m13 2-2 8h7l-7 12 2-8H6z"></path>
+                    </svg>
+                </span>
+                <span>Popular</span>
+            </a>
+        </nav>
+
+        <div class="board-company-links">
+            <p>Companies</p>
+            <a th:each="company : ${companies}"
+               class="board-company-link"
+               th:classappend="${activeCompanyId != null and activeCompanyId == company.id} ? ' is-active'"
+               th:href="@{/board/{companyId}(companyId=${company.id})}"
+               href="/board/1">
+                <span class="board-company-mark"
+                      th:text="${#strings.substring(company.name, 0, 1)}">C</span>
+                <span class="board-company-copy">
+                    <strong th:text="'c/' + ${company.name}">c/Company</strong>
+                    <small th:text="${company.industry}">Industry</small>
+                </span>
+            </a>
+        </div>
+    </aside>
+
+    <section class="board-feed" aria-label="Question threads">
+        <header class="board-feed-header">
+            <div>
+                <p th:text="${activeCompanyName != null ? 'c/' + activeCompanyName : 'All companies'}">All companies</p>
+                <h1 th:text="${popular} ? 'Popular questions' : 'Company Q&A board'">Company Q&A board</h1>
+            </div>
+            <button class="board-write-button" type="button" aria-label="Ask a question">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
+                <span>Ask</span>
+            </button>
+        </header>
+
+        <div class="board-thread-list" th:if="${questions != null and !questions.isEmpty()}">
+            <article class="board-thread" th:each="question : ${questions}">
+                <div class="board-thread-meta">
+                    <span class="board-thread-avatar"
+                          th:text="${#strings.substring(question.companyName, 0, 1)}">C</span>
+                    <a class="board-thread-company"
+                       th:href="@{/board/{companyId}(companyId=${question.companyId})}"
+                       th:text="'c/' + ${question.companyName}">c/Company</a>
+                    <span>·</span>
+                    <span th:text="${question.writerName}">익명 학생</span>
+                    <button class="board-more-button" type="button" aria-label="More actions">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                        </svg>
+                    </button>
+                </div>
+
+                <a class="board-thread-title"
+                   th:href="@{/api/questions/{questionId}(questionId=${question.id})}"
+                   th:text="${question.title}">Question title</a>
+
+                <span class="board-thread-chip" th:text="${question.category}">Question</span>
+                <p class="board-thread-excerpt" th:text="${question.content}">
+                    A short preview of the question content appears here.
+                </p>
+
+                <div class="board-thread-actions">
+                    <button class="board-vote-button" type="button" aria-label="Upvote">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m12 5 7 7h-4v7H9v-7H5z"></path>
+                        </svg>
+                        <span th:text="${question.viewCount != null ? question.viewCount : 0}">0</span>
+                    </button>
+                </div>
+            </article>
+        </div>
+
+        <div class="board-empty" th:if="${questions == null or questions.isEmpty()}">
+            <strong>No questions yet</strong>
+            <span>Once students ask questions, this feed will keep scrolling without pagination.</span>
+        </div>
+    </section>
+</main>
+</body>
+</html>

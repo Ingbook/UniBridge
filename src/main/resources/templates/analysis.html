@@ -248,6 +248,24 @@
     </section>
 </main>
 
+<footer class="site-footer">
+    <div class="site-footer-inner">
+        <a class="site-footer-brand" th:href="@{/home}" href="/home">
+            <img th:src="@{/images/unibridge_logo.png}" src="/images/unibridge_logo.png"
+                 alt="UniBridge Logo">
+            <span>UniBridge</span>
+        </a>
+        <div class="site-footer-copy">
+            <strong>Connecting Seniors, Bridging Your Career.</strong>
+            <span>ⓒ 2026. UniBridge All rights reserved.</span>
+        </div>
+        <nav class="site-footer-links" aria-label="Footer quick links">
+            <a th:href="@{/help}" href="/help">help</a>
+            <a th:href="@{/login}" href="/login">login</a>
+        </nav>
+    </div>
+</footer>
+
 <script th:src="@{/js/analysis.js}" src="/js/analysis.js"></script>
 </body>
 </html>

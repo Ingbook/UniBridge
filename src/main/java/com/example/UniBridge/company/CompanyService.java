@@ -30,9 +30,29 @@ public class CompanyService {
     }
 
     public List<CompanyDto> getPopularCompanies() {
-        return companyRepository.findTop5ByOrderByAverageScoreDesc().stream()
+        return companyRepository.findTop6ByOrderByAverageScoreDesc().stream()
+                .limit(5)
                 .map(CompanyDto::from)
                 .toList();
+    }
+
+    public List<CompanyHomeDto> getFeaturedCompanies() {
+        List<Company> companies = companyRepository.findTop6ByOrderByAverageScoreDesc();
+        return companies.stream()
+                .map(company -> CompanyHomeDto.from(company, 0))
+                .toList();
+    }
+
+    public List<CompanyHomeDto> getRecommendedCompanies() {
+        List<Company> companies = companyRepository.findAll();
+        return companies.stream()
+                .map(company -> CompanyHomeDto.from(company, 0))
+                .toList();
+    }
+
+    public CompanyHomeDto getCompanyById(Long companyId) {
+        Company company = getCompanyEntity(companyId);
+        return CompanyHomeDto.from(company, 0);
     }
 
     public Company getCompanyEntity(Long companyId) {

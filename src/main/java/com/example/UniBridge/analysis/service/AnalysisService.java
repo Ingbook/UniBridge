@@ -1,5 +1,6 @@
 package com.example.UniBridge.analysis.service;
 
+import com.example.UniBridge.analysis.dto.AiAnalysisResult;
 import com.example.UniBridge.analysis.dto.AnalysisReportResponse;
 import com.example.UniBridge.analysis.dto.GpaCertificationAnalysisRequest;
 import com.example.UniBridge.analysis.entity.AnalysisReport;
@@ -28,6 +29,7 @@ public class AnalysisService {
     private final SpecificationService specificationService;
     private final CompanyRepository companyRepository;
     private final UserCertificationRepository userCertificationRepository;
+    private final LocalAiAnalysisService localAiAnalysisService;
 
     @Transactional
     public AnalysisReportResponse analyzeGpaAndCertification(GpaCertificationAnalysisRequest request) {
@@ -45,7 +47,14 @@ public class AnalysisService {
         int totalScore = calculateTotalScore(gpaScore, certificationScore);
         int targetAverageScore = company.getAverageScore();
         int gapScore = targetAverageScore - totalScore;
-        String summary = createSummary(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
+        AiAnalysisResult aiResult = analyzeWithLocalAi(gpaScore, certificationScore, totalScore, targetAverageScore,
+                gapScore, userCertifications);
+        aiResult = validateAiResult(aiResult, gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
+        int aiAdjustmentScore = clamp(aiResult.getAdjustmentScore() == null ? 0 : aiResult.getAdjustmentScore(),
+                -10, 10);
+        int aiAdjustedScore = clamp(totalScore + aiAdjustmentScore, 0, 100);
+        int finalGapScore = targetAverageScore - aiAdjustedScore;
+        String summary = aiResult.getSummary() + " " + aiResult.getRecommendation();
 
         AnalysisReport report = AnalysisReport.builder()
                 .userId(CURRENT_USER_ID)
@@ -55,7 +64,9 @@ public class AnalysisService {
                 .gpaScore(gpaScore)
                 .certificationScore(certificationScore)
                 .totalScore(totalScore)
-                .gapScore(gapScore)
+                .aiAdjustmentScore(aiAdjustmentScore)
+                .aiAdjustedScore(aiAdjustedScore)
+                .gapScore(finalGapScore)
                 .summary(summary)
                 .build();
 
@@ -119,6 +130,52 @@ public class AnalysisService {
             summary.append(" 직무 관련 자격증을 추가하면 좋습니다.");
         }
         return summary.toString();
+    }
+
+    private AiAnalysisResult validateAiResult(AiAnalysisResult result, int gpaScore, int certificationScore,
+                                              int totalScore, int targetAverageScore, int gapScore) {
+        if (result == null) {
+            return fallbackAiResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
+        }
+
+        return AiAnalysisResult.builder()
+                .adjustmentScore(clamp(result.getAdjustmentScore() == null ? 0 : result.getAdjustmentScore(),
+                        -10, 10))
+                .summary(hasText(result.getSummary())
+                        ? result.getSummary().trim()
+                        : createSummary(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore))
+                .recommendation(hasText(result.getRecommendation())
+                        ? result.getRecommendation().trim()
+                        : "기본 점수 기준으로 부족한 항목을 보완해 주세요.")
+                .build();
+    }
+
+    private AiAnalysisResult analyzeWithLocalAi(int gpaScore, int certificationScore, int totalScore,
+                                                int targetAverageScore, int gapScore,
+                                                List<UserCertification> userCertifications) {
+        try {
+            return localAiAnalysisService.analyzeSpec(gpaScore, certificationScore, totalScore, targetAverageScore,
+                    gapScore, userCertifications);
+        } catch (Exception e) {
+            return fallbackAiResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
+        }
+    }
+
+    private AiAnalysisResult fallbackAiResult(int gpaScore, int certificationScore, int totalScore,
+                                              int targetAverageScore, int gapScore) {
+        return AiAnalysisResult.builder()
+                .adjustmentScore(0)
+                .summary(createSummary(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore))
+                .recommendation("기본 점수 기준으로 부족한 항목을 보완해 주세요.")
+                .build();
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     private void validateGpa(BigDecimal gpa, BigDecimal maxGpa) {

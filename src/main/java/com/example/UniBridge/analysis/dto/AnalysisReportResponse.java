@@ -15,6 +15,8 @@ public class AnalysisReportResponse {
     private Integer gpaScore;
     private Integer certificationScore;
     private Integer totalScore;
+    private Integer aiAdjustmentScore;
+    private Integer aiAdjustedScore;
     private Integer gapScore;
     private String summary;
 
@@ -27,6 +29,8 @@ public class AnalysisReportResponse {
                 .gpaScore(report.getGpaScore())
                 .certificationScore(report.getCertificationScore())
                 .totalScore(report.getTotalScore())
+                .aiAdjustmentScore(report.getAiAdjustmentScore())
+                .aiAdjustedScore(report.getAiAdjustedScore())
                 .gapScore(report.getGapScore())
                 .summary(report.getSummary())
                 .build();

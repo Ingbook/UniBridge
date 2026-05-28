@@ -30,6 +30,8 @@ public class AnalysisReport {
     private Integer gpaScore;
     private Integer certificationScore;
     private Integer totalScore;
+    private Integer aiAdjustmentScore;
+    private Integer aiAdjustedScore;
     private Integer gapScore;
 
     @Column(length = 2000)
@@ -39,8 +41,8 @@ public class AnalysisReport {
 
     @Builder
     public AnalysisReport(Long userId, Long companyId, String companyName, Integer targetAverageScore,
-                          Integer gpaScore, Integer certificationScore, Integer totalScore, Integer gapScore,
-                          String summary) {
+                          Integer gpaScore, Integer certificationScore, Integer totalScore,
+                          Integer aiAdjustmentScore, Integer aiAdjustedScore, Integer gapScore, String summary) {
         this.userId = userId;
         this.companyId = companyId;
         this.companyName = companyName;
@@ -48,6 +50,8 @@ public class AnalysisReport {
         this.gpaScore = gpaScore;
         this.certificationScore = certificationScore;
         this.totalScore = totalScore;
+        this.aiAdjustmentScore = aiAdjustmentScore;
+        this.aiAdjustedScore = aiAdjustedScore;
         this.gapScore = gapScore;
         this.summary = summary;
     }

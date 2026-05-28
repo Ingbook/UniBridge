@@ -39,8 +39,24 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		excludeTags 'ollama'
+	}
 	testLogging {
 		showStandardStreams = true
 	}
+}
+
+tasks.register('ollamaTest', Test) {
+	description = 'Runs tests that call a locally running Ollama model.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'ollama'
+	}
+	testLogging {
+		showStandardStreams = true
+	}
+	shouldRunAfter test
 }

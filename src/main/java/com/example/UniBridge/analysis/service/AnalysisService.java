@@ -47,14 +47,16 @@ public class AnalysisService {
         int totalScore = calculateTotalScore(gpaScore, certificationScore);
         int targetAverageScore = company.getAverageScore();
         int gapScore = targetAverageScore - totalScore;
-        AiAnalysisResult aiResult = analyzeWithLocalAi(gpaScore, certificationScore, totalScore, targetAverageScore,
-                gapScore, userCertifications);
+        AiAnalysisResult aiResult = analyzeWithLocalAi(gpaScore, certificationScore, totalScore,
+                targetAverageScore, gapScore, specification, company, userCertifications);
         aiResult = validateAiResult(aiResult, gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
         int aiAdjustmentScore = clamp(aiResult.getAdjustmentScore() == null ? 0 : aiResult.getAdjustmentScore(),
                 -10, 10);
         int aiAdjustedScore = clamp(totalScore + aiAdjustmentScore, 0, 100);
         int finalGapScore = targetAverageScore - aiAdjustedScore;
-        String summary = aiResult.getSummary() + " " + aiResult.getRecommendation();
+        String aiSummary = aiResult.getSummary();
+        String aiRecommendation = aiResult.getRecommendation();
+        String summary = aiSummary + " " + aiRecommendation;
 
         AnalysisReport report = AnalysisReport.builder()
                 .userId(CURRENT_USER_ID)
@@ -66,7 +68,10 @@ public class AnalysisService {
                 .totalScore(totalScore)
                 .aiAdjustmentScore(aiAdjustmentScore)
                 .aiAdjustedScore(aiAdjustedScore)
+                .aiAnalysisSource(aiResult.getAnalysisSource())
                 .gapScore(finalGapScore)
+                .aiSummary(aiSummary)
+                .aiRecommendation(aiRecommendation)
                 .summary(summary)
                 .build();
 
@@ -147,15 +152,19 @@ public class AnalysisService {
                 .recommendation(hasText(result.getRecommendation())
                         ? result.getRecommendation().trim()
                         : "기본 점수 기준으로 부족한 항목을 보완해 주세요.")
+                .analysisSource(hasText(result.getAnalysisSource())
+                        ? result.getAnalysisSource().trim()
+                        : LocalAiAnalysisService.SOURCE_FALLBACK)
                 .build();
     }
 
     private AiAnalysisResult analyzeWithLocalAi(int gpaScore, int certificationScore, int totalScore,
                                                 int targetAverageScore, int gapScore,
+                                                Specification specification, Company company,
                                                 List<UserCertification> userCertifications) {
         try {
             return localAiAnalysisService.analyzeSpec(gpaScore, certificationScore, totalScore, targetAverageScore,
-                    gapScore, userCertifications);
+                    gapScore, specification, company, userCertifications);
         } catch (Exception e) {
             return fallbackAiResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
         }
@@ -167,6 +176,7 @@ public class AnalysisService {
                 .adjustmentScore(0)
                 .summary(createSummary(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore))
                 .recommendation("기본 점수 기준으로 부족한 항목을 보완해 주세요.")
+                .analysisSource(LocalAiAnalysisService.SOURCE_FALLBACK)
                 .build();
     }
 

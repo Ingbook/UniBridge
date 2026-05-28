@@ -3,6 +3,8 @@ package com.example.UniBridge.analysis.service;
 import com.example.UniBridge.analysis.dto.AiAnalysisResult;
 import com.example.UniBridge.certification.entity.Certification;
 import com.example.UniBridge.certification.entity.UserCertification;
+import com.example.UniBridge.company.Company;
+import com.example.UniBridge.specification.entity.Specification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +18,11 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class LocalAiAnalysisService {
+
+    public static final String SOURCE_OLLAMA = "OLLAMA";
+    public static final String SOURCE_DISABLED = "DISABLED";
+    public static final String SOURCE_UNAVAILABLE = "UNAVAILABLE";
+    public static final String SOURCE_FALLBACK = "FALLBACK";
 
     private static final String DEFAULT_SUMMARY = "서버가 계산한 기본 점수를 기준으로 목표 기업과의 차이를 분석했습니다.";
     private static final String DEFAULT_RECOMMENDATION = "학점과 직무 관련 자격증 중 부족한 항목을 우선 보완해 주세요.";
@@ -32,34 +39,39 @@ public class LocalAiAnalysisService {
             int totalScore,
             int targetAverageScore,
             int gapScore,
+            Specification specification,
+            Company company,
             List<UserCertification> userCertifications
     ) {
         try {
             if (!aiEnabled) {
-                return fallbackResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
+                return fallbackResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore,
+                        SOURCE_DISABLED);
             }
 
             ChatClient.Builder builder = chatClientBuilderProvider.getIfAvailable();
             if (builder == null) {
-                return fallbackResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
+                return fallbackResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore,
+                        SOURCE_UNAVAILABLE);
             }
 
             String response = builder.build()
                     .prompt()
                     .user(createPrompt(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore,
-                            userCertifications))
+                            specification, company, userCertifications))
                     .call()
                     .content();
 
-            return validateResult(parseResponse(response));
+            return validateResult(parseResponse(response), SOURCE_OLLAMA);
         } catch (Exception e) {
-            return fallbackResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore);
+            return fallbackResult(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore,
+                    SOURCE_FALLBACK);
         }
     }
 
-    AiAnalysisResult validateResult(AiAnalysisResult result) {
+    AiAnalysisResult validateResult(AiAnalysisResult result, String analysisSource) {
         if (result == null) {
-            return fallbackResult(0, 0, 0, 0, 0);
+            return fallbackResult(0, 0, 0, 0, 0, analysisSource);
         }
 
         return AiAnalysisResult.builder()
@@ -68,6 +80,7 @@ public class LocalAiAnalysisService {
                 .recommendation(hasText(result.getRecommendation())
                         ? result.getRecommendation().trim()
                         : DEFAULT_RECOMMENDATION)
+                .analysisSource(analysisSource)
                 .build();
     }
 
@@ -95,6 +108,8 @@ public class LocalAiAnalysisService {
             int totalScore,
             int targetAverageScore,
             int gapScore,
+            Specification specification,
+            Company company,
             List<UserCertification> userCertifications
     ) {
         return """
@@ -102,6 +117,10 @@ public class LocalAiAnalysisService {
                 서버가 이미 계산한 점수를 신뢰하고, 기본 총점을 다시 계산하지 마세요.
 
                 입력 정보:
+                - 목표 기업명: %s
+                - 목표 기업 산업군: %s
+                - 목표 기업 주요 직무: %s
+                - 사용자 학점: %s / %s
                 - 학점 점수: %d
                 - 자격증 점수: %d
                 - 기본 총점: %d
@@ -125,7 +144,13 @@ public class LocalAiAnalysisService {
                   "summary": "한 문장 요약",
                   "recommendation": "구체적인 다음 행동"
                 }
-                """.formatted(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore,
+                """.formatted(
+                company == null ? "알 수 없음" : blankToDefault(company.getName(), "알 수 없음"),
+                company == null ? "알 수 없음" : blankToDefault(company.getIndustry(), "알 수 없음"),
+                company == null ? "알 수 없음" : blankToDefault(company.getMainJobRole(), "알 수 없음"),
+                specification == null || specification.getGpa() == null ? "알 수 없음" : specification.getGpa(),
+                specification == null || specification.getMaxGpa() == null ? "알 수 없음" : specification.getMaxGpa(),
+                gpaScore, certificationScore, totalScore, targetAverageScore, gapScore,
                 certificationNames(userCertifications));
     }
 
@@ -148,12 +173,14 @@ public class LocalAiAnalysisService {
             int certificationScore,
             int totalScore,
             int targetAverageScore,
-            int gapScore
+            int gapScore,
+            String analysisSource
     ) {
         return AiAnalysisResult.builder()
                 .adjustmentScore(0)
                 .summary(createFallbackSummary(gpaScore, certificationScore, totalScore, targetAverageScore, gapScore))
                 .recommendation(DEFAULT_RECOMMENDATION)
+                .analysisSource(analysisSource)
                 .build();
     }
 
@@ -185,5 +212,9 @@ public class LocalAiAnalysisService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private String blankToDefault(String value, String defaultValue) {
+        return hasText(value) ? value : defaultValue;
     }
 }

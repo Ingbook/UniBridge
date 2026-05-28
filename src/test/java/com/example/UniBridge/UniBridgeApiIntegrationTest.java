@@ -148,6 +148,9 @@ class UniBridgeApiIntegrationTest {
                 .andExpect(jsonPath("$.data.totalScore", is(70)))
                 .andExpect(jsonPath("$.data.aiAdjustmentScore", is(0)))
                 .andExpect(jsonPath("$.data.aiAdjustedScore", is(70)))
+                .andExpect(jsonPath("$.data.aiAnalysisSource", is("DISABLED")))
+                .andExpect(jsonPath("$.data.aiSummary").isNotEmpty())
+                .andExpect(jsonPath("$.data.aiRecommendation").isNotEmpty())
                 .andExpect(jsonPath("$.data.gapScore", is(15)));
 
         mockMvc.perform(get("/api/analysis/me"))

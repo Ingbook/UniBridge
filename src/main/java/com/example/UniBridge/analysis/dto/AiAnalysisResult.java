@@ -1,5 +1,6 @@
 package com.example.UniBridge.analysis.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,9 +12,11 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AiAnalysisResult {
 
     private Integer adjustmentScore;
     private String summary;
     private String recommendation;
+    private String analysisSource;
 }

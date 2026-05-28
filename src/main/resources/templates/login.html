@@ -1,69 +1,34 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle} ?: 'Unibridge 메인 - 국립공주대학교'">Unibridge 메인 - 국립공주대학교</title>
+    <title layout:title-pattern="$CONTENT_TITLE | $LAYOUT_TITLE">LOGIN | UniBridge</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <link rel="stylesheet" th:href="@{/css/login.css}" href="/css/login.css">
+    <link rel="stylesheet" th:href="@{/css/UniBridge.css}" href="/css/UniBridge.css">
 </head>
-<body>
+<body class="login-page">
 <nav class="navbar">
-    <div class="nav-brand">
-        <span class="uni" th:text="${serviceName} ?: 'Unibridge'">Unibridge</span>
+    <a class="nav-brand" th:href="@{/home}" href="/home">
+        <img th:src="@{/images/unibridge_logo.png}"
+             alt="UniBridge Logo" class="service-logo">
+        <span class="service-name" th:text="${serviceName} ?: 'Unibridge'">Unibridge</span>
         <span class="cross">✕</span>
         <div class="knu-brand">
-            <svg class="knu-emblem" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <circle cx="50" cy="50" r="48" fill="#ffffff" stroke="#008b46" stroke-width="2.5"/>
-                <circle cx="50" cy="50" r="32" fill="#0f3b8c" stroke="#ffffff" stroke-width="1.5"/>
-                <circle cx="50" cy="50" r="33.5" fill="none" stroke="#008b46" stroke-width="1"/>
-                <defs>
-                    <path id="arc-top" d="M 14,50 A 36,36 0 0,1 86,50"/>
-                    <path id="arc-bot" d="M 14,50 A 36,36 0 0,0 86,50"/>
-                </defs>
-                <text font-family="Arial, sans-serif" font-size="7.5" fill="#008b46" font-weight="bold" letter-spacing="0.5">
-                    <textPath href="#arc-top" startOffset="50%" text-anchor="middle">KONGJU NATIONAL UNIVERSITY</textPath>
-                </text>
-                <text font-family="'Pretendard', sans-serif" font-size="10" fill="#008b46" font-weight="bold" letter-spacing="1.5">
-                    <textPath href="#arc-bot" startOffset="50%" text-anchor="middle">국립공주대학교</textPath>
-                </text>
-                <circle cx="9" cy="50" r="1.5" fill="#008b46"/>
-                <circle cx="91" cy="50" r="1.5" fill="#008b46"/>
-                <path d="M 50 24 L 72 41 L 28 41 Z" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
-                <path d="M 50 29 L 63 39 L 37 39 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
-                <text x="50" y="58" font-family="'Times New Roman', serif" font-size="16" fill="#ffffff" font-weight="bold" text-anchor="middle">KNU</text>
-                <line x1="34" y1="63" x2="66" y2="63" stroke="#ffffff" stroke-width="1"/>
-                <text x="50" y="73" font-family="Arial, sans-serif" font-size="7.5" fill="#ffffff" text-anchor="middle" font-weight="bold">1948</text>
-            </svg>
-            <span class="knu" th:text="${universityName} ?: '국립공주대학교'">국립공주대학교</span>
+            <img th:src="@{/images/knu_logo_wide.png}"
+                 alt="KNU Logo" class="knu-emblem">
         </div>
-    </div>
+    </a>
     <div class="nav-links">
-        <a th:href="@{/}" href="/">홈</a>
-        <a th:href="@{/register}" href="/register">회원가입</a>
-        <a th:href="@{/mypage}" href="/mypage">내 정보</a>
+        <a th:href="@{/help}">문의하기</a>
     </div>
 </nav>
 
 <main class="hero-container">
     <section class="hero-content" aria-labelledby="hero-title">
         <div class="custom-logo">
-            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <rect x="20" y="25" width="10" height="50" fill="none" stroke="var(--knu-green)" stroke-width="3"/>
-                <rect x="15" y="20" width="20" height="5" fill="var(--knu-green)"/>
-                <rect x="15" y="75" width="20" height="5" fill="var(--knu-green)"/>
-                <rect x="70" y="25" width="10" height="50" fill="none" stroke="var(--knu-green)" stroke-width="3"/>
-                <rect x="65" y="20" width="20" height="5" fill="var(--knu-green)"/>
-                <rect x="65" y="75" width="20" height="5" fill="var(--knu-green)"/>
-                <path d="M 25 35 L 75 65" stroke="var(--knu-green)" stroke-width="3"/>
-                <path d="M 25 65 L 75 35" stroke="var(--knu-green)" stroke-width="3"/>
-            </svg>
-            <div class="custom-logo-text">
-                <div class="uni" th:text="${serviceName} ?: 'UniBridge'">UniBridge</div>
-                <div class="knu" th:text="${logoSubtitle} ?: 'KNU 1948'">KNU 1948</div>
-            </div>
+            <img th:src="@{/images/unibridge_logo.png}" alt="UniBridge Logo" class="custom-logo-img">
         </div>
-
         <h1 class="hero-title" id="hero-title">
             <span th:text="${heroLine1} ?: '공주대 학우들의'">공주대 학우들의</span><br>
             <span th:text="${heroLine2} ?: '성공적인 내일을 위한'">성공적인 내일을 위한</span><br>
@@ -103,7 +68,7 @@
                     <form th:action="@{/login}" action="/login" method="post">
                         <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <div class="input-group">
-                            <input type="text" name="username" th:value="${username}" placeholder="학번 또는 사번" autocomplete="username" required>
+                            <input type="text" name="username" th:value="${username}" placeholder="학번" autocomplete="username" required>
                         </div>
                         <div class="input-group">
                             <input type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required>

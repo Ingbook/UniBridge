@@ -33,13 +33,11 @@ public class Alumni {
     @Column(name = "portfolio_level")
     private String portfolioLevel;
 
-    // 합격한 회사 (N:1 연관관계)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
-    private Company company;
+    // 합격한 회사 ID
+    @Column(name = "company_id")
+    private Long companyId;
 
-    // 졸업한 학과 (N:1 연관관계)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id")
-    private Department department;
+    // 졸업한 학과 ID
+    @Column(name = "department_id")
+    private Long departmentId;
 }

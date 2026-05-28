@@ -119,7 +119,8 @@ class AnalysisServiceTest {
         when(specificationService.getMySpecificationEntityForAnalysis()).thenReturn(specification);
         when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
         when(userCertificationRepository.findByUserId(1L)).thenReturn(userCertifications);
-        when(localAiAnalysisService.analyzeSpec(84, 50, 70, 85, 15, userCertifications))
+        when(localAiAnalysisService.analyzeSpec(eq(84), eq(50), eq(70), eq(85), eq(15),
+                eq(specification), eq(company), eq(userCertifications)))
                 .thenReturn(aiResult(5, "AI 분석 요약입니다.", "정보처리기사 기반 프로젝트를 추가하세요."));
         when(analysisReportRepository.save(any(AnalysisReport.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -134,7 +135,10 @@ class AnalysisServiceTest {
         assertThat(response.getTotalScore()).isEqualTo(70);
         assertThat(response.getAiAdjustmentScore()).isEqualTo(5);
         assertThat(response.getAiAdjustedScore()).isEqualTo(75);
+        assertThat(response.getAiAnalysisSource()).isEqualTo(LocalAiAnalysisService.SOURCE_OLLAMA);
         assertThat(response.getGapScore()).isEqualTo(10);
+        assertThat(response.getAiSummary()).isEqualTo("AI 분석 요약입니다.");
+        assertThat(response.getAiRecommendation()).isEqualTo("정보처리기사 기반 프로젝트를 추가하세요.");
         assertThat(response.getSummary()).contains("AI 분석 요약입니다.", "정보처리기사 기반 프로젝트를 추가하세요.");
         printAiAnalysisResult("AI 정상 응답", response);
         verify(analysisReportRepository).save(any(AnalysisReport.class));
@@ -144,7 +148,8 @@ class AnalysisServiceTest {
     void analyzeGpaAndCertification_limitsAdjustmentScoreToTen_whenAiReturnsGreaterThanTen() {
         List<UserCertification> userCertifications = List.of(userCertification(certification("정보처리기사", 30)));
         prepareAnalysis(userCertifications);
-        when(localAiAnalysisService.analyzeSpec(84, 30, 62, 85, 23, userCertifications))
+        when(localAiAnalysisService.analyzeSpec(eq(84), eq(30), eq(62), eq(85), eq(23),
+                any(Specification.class), any(Company.class), eq(userCertifications)))
                 .thenReturn(aiResult(25, "가산 요인이 있습니다.", "관련 경험을 정리하세요."));
         when(analysisReportRepository.save(any(AnalysisReport.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -162,7 +167,8 @@ class AnalysisServiceTest {
     void analyzeGpaAndCertification_limitsAdjustmentScoreToMinusTen_whenAiReturnsLessThanMinusTen() {
         List<UserCertification> userCertifications = List.of(userCertification(certification("정보처리기사", 30)));
         prepareAnalysis(userCertifications);
-        when(localAiAnalysisService.analyzeSpec(84, 30, 62, 85, 23, userCertifications))
+        when(localAiAnalysisService.analyzeSpec(eq(84), eq(30), eq(62), eq(85), eq(23),
+                any(Specification.class), any(Company.class), eq(userCertifications)))
                 .thenReturn(aiResult(-30, "보완이 필요합니다.", "자격증을 추가하세요."));
         when(analysisReportRepository.save(any(AnalysisReport.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -181,13 +187,15 @@ class AnalysisServiceTest {
         prepareAnalysis(userCertifications);
         doThrow(new RuntimeException("ollama unavailable"))
                 .when(localAiAnalysisService)
-                .analyzeSpec(eq(84), eq(30), eq(62), eq(85), eq(23), eq(userCertifications));
+                .analyzeSpec(eq(84), eq(30), eq(62), eq(85), eq(23),
+                        any(Specification.class), any(Company.class), eq(userCertifications));
         when(analysisReportRepository.save(any(AnalysisReport.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         AnalysisReportResponse response = analysisService.analyzeGpaAndCertification(analysisRequest(1L));
 
         assertThat(response.getAiAdjustmentScore()).isZero();
+        assertThat(response.getAiAnalysisSource()).isEqualTo(LocalAiAnalysisService.SOURCE_FALLBACK);
         assertThat(response.getAiAdjustedScore()).isEqualTo(62);
         assertThat(response.getGapScore()).isEqualTo(23);
         assertThat(response.getSummary())
@@ -251,6 +259,7 @@ class AnalysisServiceTest {
                 .adjustmentScore(adjustmentScore)
                 .summary(summary)
                 .recommendation(recommendation)
+                .analysisSource(LocalAiAnalysisService.SOURCE_OLLAMA)
                 .build();
     }
 

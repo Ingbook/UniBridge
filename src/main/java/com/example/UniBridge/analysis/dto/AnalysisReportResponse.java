@@ -17,7 +17,10 @@ public class AnalysisReportResponse {
     private Integer totalScore;
     private Integer aiAdjustmentScore;
     private Integer aiAdjustedScore;
+    private String aiAnalysisSource;
     private Integer gapScore;
+    private String aiSummary;
+    private String aiRecommendation;
     private String summary;
 
     public static AnalysisReportResponse from(AnalysisReport report) {
@@ -31,7 +34,10 @@ public class AnalysisReportResponse {
                 .totalScore(report.getTotalScore())
                 .aiAdjustmentScore(report.getAiAdjustmentScore())
                 .aiAdjustedScore(report.getAiAdjustedScore())
+                .aiAnalysisSource(report.getAiAnalysisSource())
                 .gapScore(report.getGapScore())
+                .aiSummary(report.getAiSummary())
+                .aiRecommendation(report.getAiRecommendation())
                 .summary(report.getSummary())
                 .build();
     }

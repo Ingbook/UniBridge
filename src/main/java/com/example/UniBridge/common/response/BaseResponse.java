@@ -1,4 +1,4 @@
-package com.example.UniBridge.common;
+package com.example.UniBridge.common.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

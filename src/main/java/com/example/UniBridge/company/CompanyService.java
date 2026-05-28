@@ -31,6 +31,7 @@ public class CompanyService {
 
     public List<CompanyDto> getPopularCompanies() {
         return companyRepository.findTop6ByOrderByAverageScoreDesc().stream()
+                .limit(5)
                 .map(CompanyDto::from)
                 .toList();
     }

@@ -23,10 +23,10 @@ let currentIndex = 0;
 
 const categoryLabels = {
     GPA: '학점',
-    Language: '어학성적',
-    Certifications: '자격증',
-    Awards: '수상경력',
-    ProjectPortfolio: '프로젝트/포트폴리오'
+    LANGUAGE: '어학성적',
+    CERTIFICATION: '자격증',
+    AWARD: '수상경력',
+    PROJECT_PORTFOLIO: '프로젝트/포트폴리오'
 };
 
 function updateCarousel() {
@@ -41,11 +41,27 @@ function profileRows(profile) {
         ['이름', profile.name],
         ['학점', `${profile.gpa ?? '-'} / ${profile.maxGpa ?? '-'}`],
         ['어학성적', `${profile.languageType ?? '-'} ${profile.languageScore ?? '-'}`],
-        ['자격증', `${profile.certificationCount ?? 0}개`],
+        ['자격증', formatCertificationProfile(profile)],
         ['수상경력', `${profile.awardCount ?? 0}개`],
         ['프로젝트', profile.projectSummary || '-'],
-        ['포트폴리오', profile.portfolioLevel || '-']
+        ['포트폴리오', profile.portfolioDescription || profile.portfolioLevel || '-']
     ];
+}
+
+function formatCertificationProfile(profile) {
+    const names = profile.certificationNames || [];
+    const count = profile.certificationCount ?? names.length;
+    if (names.length === 0) {
+        return `총 ${count}개`;
+    }
+    return `${formatCertificationNames(names, count)}<small>총 ${count}개</small>`;
+}
+
+function formatCertificationNames(names, count) {
+    const limit = 3;
+    const visible = names.slice(0, limit).join(', ');
+    const remaining = Math.max(count - limit, 0);
+    return remaining > 0 ? `${visible} 외 ${remaining}개` : visible;
 }
 
 function renderProfile(container, profile) {
@@ -137,7 +153,7 @@ function renderAnalysis(data) {
     comparisonItems.innerHTML = data.comparisonItems.map(item => `
         <div class="analysis-comparison-item">
             <div>
-                <span>${categoryLabels[item.category] || item.category}</span>
+                <span>${item.displayName || categoryLabels[item.category] || item.category}</span>
                 <strong>${item.aiScore}점</strong>
             </div>
             <p>${item.userValue} → ${item.alumnusValue}</p>

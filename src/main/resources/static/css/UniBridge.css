@@ -1362,6 +1362,14 @@ footer p {
     overflow-wrap: anywhere;
 }
 
+.analysis-spec-row strong small {
+    display: block;
+    margin-top: 0.22rem;
+    color: #697386;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
 .analysis-comparison-item {
     display: grid;
     gap: 0.35rem;

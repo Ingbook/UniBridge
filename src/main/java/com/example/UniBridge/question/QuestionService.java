@@ -26,9 +26,9 @@ public class QuestionService {
                 .filter(question -> !StringUtils.hasText(keyword)
                         || question.getTitle().contains(keyword)
                         || question.getContent().contains(keyword)
-                        || question.getCompany().getName().contains(keyword))
+                        || (question.getCompany() != null && question.getCompany().getName().contains(keyword)))
                 .filter(question -> !StringUtils.hasText(category) || question.getCategory().equalsIgnoreCase(category))
-                .filter(question -> companyId == null || question.getCompany().getId().equals(companyId))
+                .filter(question -> companyId == null || (question.getCompany() != null && question.getCompany().getId().equals(companyId)))
                 .map(QuestionDto::from)
                 .toList();
     }
@@ -45,8 +45,11 @@ public class QuestionService {
 
     @Transactional
     public QuestionDto createQuestion(QuestionRequest request) {
-        validate(request);
-        Company company = companyService.getCompanyEntity(request.getCompanyId());
+        Company company = null;
+        if (request.getCompanyId() != null && request.getCompanyId() != 0) {
+            company = companyService.getCompanyEntity(request.getCompanyId());
+        }
+
         Question question = Question.builder()
                 .company(company)
                 .category(request.getCategory())
@@ -59,9 +62,11 @@ public class QuestionService {
 
     @Transactional
     public QuestionDto updateQuestion(Long questionId, QuestionRequest request) {
-        validate(request);
         Question question = getQuestionEntity(questionId);
-        Company company = companyService.getCompanyEntity(request.getCompanyId());
+        Company company = null;
+        if (request.getCompanyId() != null && request.getCompanyId() != 0) {
+            company = companyService.getCompanyEntity(request.getCompanyId());
+        }
         question.update(company, request.getCategory(), request.getTitle(), request.getContent());
         return QuestionDto.from(question);
     }
@@ -77,20 +82,5 @@ public class QuestionService {
     public Question getQuestionEntity(Long questionId) {
         return questionRepository.findById(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 질문입니다."));
-    }
-
-    private void validate(QuestionRequest request) {
-        if (request.getCompanyId() == null) {
-            throw new IllegalArgumentException("기업 ID를 입력해 주세요.");
-        }
-        if (!StringUtils.hasText(request.getCategory())) {
-            throw new IllegalArgumentException("질문 카테고리를 입력해 주세요.");
-        }
-        if (!StringUtils.hasText(request.getTitle())) {
-            throw new IllegalArgumentException("질문 제목을 입력해 주세요.");
-        }
-        if (!StringUtils.hasText(request.getContent())) {
-            throw new IllegalArgumentException("질문 내용을 입력해 주세요.");
-        }
     }
 }

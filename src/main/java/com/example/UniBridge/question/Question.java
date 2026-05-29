@@ -25,8 +25,8 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = true) // Make it explicitly optional
+    @JoinColumn(name = "company_id", nullable = true) // Allow null in DB
     private Company company;
 
     private String category;

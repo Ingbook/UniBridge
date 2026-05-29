@@ -8,5 +8,7 @@ public interface AlumnusRepository extends JpaRepository<Alumnus, Long> {
 
     List<Alumnus> findByCompanyId(Long companyId);
 
+    long countByCompanyId(Long companyId);
+
     Optional<Alumnus> findByCompanyIdAndId(Long companyId, Long alumnusId);
 }

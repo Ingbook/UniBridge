@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${question.title} + ' | UniBridge'">Question Detail</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" th:href="@{/css/UniBridge.css}" href="/css/UniBridge.css">
+</head>
+<body class="board-page">
+
+<main class="form-main-container">
+    <div class="board-form-container">
+        <header class="board-form-header">
+            <h1 th:text="${question.title}">Question Title</h1>
+            <p th:text="'in c/' + ${question.companyName}" class="question-detail-subtitle">c/CompanyName</p>
+        </header>
+
+        <div class="form-card">
+            <p th:text="${question.content}" class="question-detail-content">Question content.</p>
+        </div>
+
+        <div class="answers-section">
+            <h2 class="answers-title" th:text="${#lists.size(question.answers)} + ' Answers'">Answers</h2>
+
+            <div th:each="answer : ${question.answers}" class="answer-card" th:classappend="${answer.accepted} ? 'accepted'">
+                <div class="answer-header">
+                    <span class="answer-writer" th:text="${answer.writerName}">Answer Writer</span>
+                    <form th:if="${!answer.accepted}" th:action="@{/answer/{answerId}/accept(answerId=${answer.id})}" method="post" onsubmit="return confirm('Are you sure you want to accept this answer?');">
+                        <button type="submit" class="btn-gray">Accept</button>
+                    </form>
+                </div>
+                <p class="answer-content" th:text="${answer.content}">Answer content.</p>
+            </div>
+
+            <div th:if="${#lists.isEmpty(question.answers)}" class="no-answers">
+                <p>아직 답변이 없습니다. 첫 번째 답변을 달아주세요!</p>
+            </div>
+        </div>
+
+        <div class="answer-form">
+            <form th:action="@{/question/{questionId}/answer(questionId=${question.id})}" method="post">
+                <div class="form-group">
+                    <label for="content" class="answer-form-label">답변하기</label>
+                    <textarea id="content" name="content" class="form-control" rows="6" placeholder="현직자의 경험을 바탕으로 답변을 남겨주세요."></textarea>
+                </div>
+                <div class="form-actions form-actions-centered">
+                    <button type="submit" class="board-write-button" style="width: auto; padding: 0.8rem 1.5rem;">답변 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

@@ -19,14 +19,16 @@
             <div class="form-card">
                 <div class="form-group">
                     <label for="company-search">커뮤니티</label>
-                    <p class="form-group-description">질문을 올릴 커뮤니티를 선택하세요.</p>
+                    <p class="form-group-description">질문을 올릴 커뮤니티를 선택하세요. 특정 회사가 아니라면 'Random'을 선택하세요.</p>
                     <input type="text" id="company-search" class="form-control" placeholder="검색 후 아래에서 선택하기...">
-                    <select id="companyId" th:field="*{companyId}" class="form-control" style="margin-top: 10px;">
-                        <option value="">커뮤니티 선택하기</option>
+                    <select id="companyId" th:field="*{companyId}" class="form-control" th:classappend="${#fields.hasErrors('companyId')} ? 'is-invalid'" style="margin-top: 10px;">
+                        <option value="" disabled selected>커뮤니티 선택하기</option>
+                        <option value="0">Random (모든 회사)</option>
                         <option th:each="company : ${companies}"
                                 th:value="${company.id}"
                                 th:text="${company.name}">Company Name</option>
                     </select>
+                    <span class="error-message" th:if="${#fields.hasErrors('companyId')}" th:errors="*{companyId}">Error</span>
                 </div>
             </div>
 
@@ -34,7 +36,8 @@
                 <div class="form-group">
                     <label for="title">제목</label>
                     <p class="form-group-description">질문은 간결하고 본문 내용을 함축하고 있으면 좋아요.</p>
-                    <input type="text" id="title" th:field="*{title}" class="form-control" placeholder="예시: 요즘 채용 분위기가 어떤가요?">
+                    <input type="text" id="title" th:field="*{title}" class="form-control" th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'" placeholder="예시: 요즘 채용 분위기가 어떤가요?">
+                    <span class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Error</span>
                 </div>
             </div>
 
@@ -42,7 +45,8 @@
                 <div class="form-group">
                     <label for="content">본문</label>
                     <p class="form-group-description">커뮤니티 이용 수칙을 준수해주세요.</p>
-                    <textarea id="content" th:field="*{content}" class="form-control" rows="10"></textarea>
+                    <textarea id="content" th:field="*{content}" class="form-control" th:classappend="${#fields.hasErrors('content')} ? 'is-invalid'" rows="10"></textarea>
+                    <span class="error-message" th:if="${#fields.hasErrors('content')}" th:errors="*{content}">Error</span>
                 </div>
             </div>
 
@@ -53,21 +57,6 @@
         </form>
     </div>
 </main>
-<script>
-    document.getElementById('company-search').addEventListener('input', function() {
-        const filter = this.value.toLowerCase();
-        const select = document.getElementById('companyId');
-        const options = select.options;
-        for (let i = 1; i < options.length; i++) {
-            const option = options[i];
-            const text = option.text.toLowerCase();
-            if (text.startsWith(filter)) {
-                option.style.display = '';
-            } else {
-                option.style.display = 'none';
-            }
-        }
-    });
-</script>
+<script th:src="@{/js/board_form.js}"></script>
 </body>
 </html>

@@ -542,28 +542,60 @@ textarea.form-control {
     min-height: 150px;
 }
 
+
+/* Styling for buttons inside the form */
 .form-actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
     margin-top: 2rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.btn-secondary {
-    background-color: transparent;
-    color: #ef4444;
-    border: 1px solid #fca5a5;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+.form-actions.form-actions-centered {
+    display: flex;
+    justify-content: center;
+}
+
+.form-actions > .board-write-button,
+.form-actions > .btn-secondary {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: center;
     text-decoration: none;
-    font-weight: 600;
-    transition: background-color 0.2s;
+    height: 50px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
-.btn-secondary:hover {
-    background-color: #fef2f2;
+.form-actions > .board-write-button {
+    background: var(--uni-purple);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.form-actions > .board-write-button:hover {
+    background: var(--uni-purple-hover);
+}
+
+.form-actions > .btn-secondary {
+    background-color: #e2e8f0;
+    color: var(--text-gray);
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.form-actions > .btn-secondary:hover {
+    background-color: #cbd5e1;
+    color: var(--text-dark);
 }
 
 
@@ -1271,7 +1303,8 @@ textarea.form-control {
     letter-spacing: 0;
 }
 
-.board-write-button {
+/* Revert board-write-button on the main board page */
+.board-feed-header .board-write-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1280,12 +1313,17 @@ textarea.form-control {
     padding: 0 1rem;
     border: 0;
     border-radius: 999px;
-    background: #ff4500;
+    background: var(--uni-purple);
     color: #ffffff;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 900;
     white-space: nowrap;
+    text-decoration: none;
+}
+
+.board-feed-header .board-write-button:hover {
+    background: var(--uni-purple-hover);
 }
 
 .board-thread-list {
@@ -1901,6 +1939,70 @@ textarea.form-control {
 .analysis-alumni-card .company-avatar {
     width: 48px;
     height: 48px;
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: block;
+}
+.form-control.is-invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+.answer-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.answer-card.accepted {
+    border-color: var(--uni-purple);
+    background: #f3e8ff;
+}
+.answer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.answer-writer {
+    font-weight: 700;
+}
+.answer-content {
+    line-height: 1.6;
+}
+.answer-form {
+    margin-top: 2rem;
+}
+.form-actions.form-actions-centered {
+    display: flex;
+    justify-content: center;
+    max-width: none;
+}
+.question-detail-subtitle {
+    color: var(--text-gray);
+    margin-top: 0.5rem;
+}
+.question-detail-content {
+    white-space: pre-wrap;
+    line-height: 1.7;
+}
+.answers-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+.no-answers {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-gray);
+}
+.answer-form-label {
+    font-size: 1.2rem;
+    font-weight: 700;
 }
 
 @keyframes fadeInLeft {

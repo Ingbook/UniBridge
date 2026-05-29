@@ -19,8 +19,8 @@ public class QuestionDto {
     public static QuestionDto from(Question question) {
         return QuestionDto.builder()
                 .id(question.getId())
-                .companyId(question.getCompany().getId())
-                .companyName(question.getCompany().getName())
+                .companyId(question.getCompany() != null ? question.getCompany().getId() : null)
+                .companyName(question.getCompany() != null ? question.getCompany().getName() : "Random")
                 .category(question.getCategory())
                 .title(question.getTitle())
                 .content(question.getContent())

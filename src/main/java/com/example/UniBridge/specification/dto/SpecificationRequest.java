@@ -10,4 +10,7 @@ public class SpecificationRequest {
 
     private BigDecimal gpa;
     private BigDecimal maxGpa;
+    private Integer awardCount;
+    private String projectSummary;
+    private String portfolioDescription;
 }

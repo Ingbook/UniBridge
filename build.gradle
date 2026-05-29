@@ -38,9 +38,15 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
+def hasCommandLineTestFilter = gradle.startParameter.taskRequests.any { request ->
+	request.args.any { arg -> arg == '--tests' || arg.startsWith('--tests=') }
+}
+
 tasks.named('test') {
 	useJUnitPlatform {
-		excludeTags 'ollama'
+		if (!hasCommandLineTestFilter) {
+			excludeTags 'ollama'
+		}
 	}
 	testLogging {
 		showStandardStreams = true
@@ -48,7 +54,19 @@ tasks.named('test') {
 }
 
 tasks.register('ollamaTest', Test) {
-	description = 'Runs tests that call a locally running Ollama model.'
+	description = 'Runs tests with access to a locally running Ollama model.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform()
+	testLogging {
+		showStandardStreams = true
+	}
+	shouldRunAfter test
+}
+
+tasks.register('ollamaTaggedTest', Test) {
+	description = 'Runs only tests tagged with ollama.'
 	group = 'verification'
 	testClassesDirs = sourceSets.test.output.classesDirs
 	classpath = sourceSets.test.runtimeClasspath

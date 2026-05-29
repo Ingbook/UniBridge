@@ -40,6 +40,7 @@ class SpecificationServiceTest {
         assertThat(response.getUserId()).isEqualTo(1L);
         assertThat(response.getGpa()).isEqualByComparingTo("4.1");
         assertThat(response.getMaxGpa()).isEqualByComparingTo("4.5");
+        assertThat(response.getAwardCount()).isEqualTo(1);
         verify(specificationRepository).save(any(Specification.class));
     }
 
@@ -49,8 +50,9 @@ class SpecificationServiceTest {
                 .userId(1L)
                 .gpa(BigDecimal.valueOf(3.0))
                 .maxGpa(BigDecimal.valueOf(4.5))
+                .awardCount(1)
                 .build();
-        SpecificationRequest request = specificationRequest("3.8", "4.5");
+        SpecificationRequest request = specificationRequest("3.8", "4.5", 2);
         when(specificationRepository.findByUserId(1L)).thenReturn(Optional.of(specification));
         when(specificationRepository.save(specification)).thenReturn(specification);
 
@@ -58,6 +60,29 @@ class SpecificationServiceTest {
 
         assertThat(response.getGpa()).isEqualByComparingTo("3.8");
         assertThat(response.getMaxGpa()).isEqualByComparingTo("4.5");
+        assertThat(response.getAwardCount()).isEqualTo(2);
+        verify(specificationRepository).save(specification);
+    }
+
+    @Test
+    void saveMySpecification_keepsProjectAndPortfolio_whenRequestDoesNotContainThem() {
+        Specification specification = Specification.builder()
+                .userId(1L)
+                .gpa(BigDecimal.valueOf(3.0))
+                .maxGpa(BigDecimal.valueOf(4.5))
+                .awardCount(1)
+                .projectSummary("AI 기반 취업 분석 서비스 개발")
+                .portfolioDescription("AI 기반 취업 분석 서비스 개발 포트폴리오")
+                .build();
+        SpecificationRequest request = specificationRequest("3.8", "4.5", null);
+        when(specificationRepository.findByUserId(1L)).thenReturn(Optional.of(specification));
+        when(specificationRepository.save(specification)).thenReturn(specification);
+
+        SpecificationResponse response = specificationService.saveMySpecification(request);
+
+        assertThat(response.getProjectSummary()).isEqualTo("AI 기반 취업 분석 서비스 개발");
+        assertThat(response.getPortfolioDescription()).isEqualTo("AI 기반 취업 분석 서비스 개발 포트폴리오");
+        assertThat(response.getAwardCount()).isEqualTo(1);
         verify(specificationRepository).save(specification);
     }
 
@@ -96,9 +121,14 @@ class SpecificationServiceTest {
     }
 
     private SpecificationRequest specificationRequest(String gpa, String maxGpa) {
+        return specificationRequest(gpa, maxGpa, 1);
+    }
+
+    private SpecificationRequest specificationRequest(String gpa, String maxGpa, Integer awardCount) {
         SpecificationRequest request = new SpecificationRequest();
         ReflectionTestUtils.setField(request, "gpa", new BigDecimal(gpa));
         ReflectionTestUtils.setField(request, "maxGpa", new BigDecimal(maxGpa));
+        ReflectionTestUtils.setField(request, "awardCount", awardCount);
         return request;
     }
 }

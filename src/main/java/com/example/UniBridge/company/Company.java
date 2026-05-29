@@ -24,12 +24,17 @@ public class Company {
     private String industry;
     private String mainJobRole;
     private Integer averageScore;
+    private Integer alumnusCount;
+    private String location;
 
     @Builder
-    public Company(String name, String industry, String mainJobRole, Integer averageScore) {
+    public Company(String name, String industry, String mainJobRole, Integer averageScore,
+                   Integer alumnusCount, String location) {
         this.name = name;
         this.industry = industry;
         this.mainJobRole = mainJobRole;
         this.averageScore = averageScore;
+        this.alumnusCount = alumnusCount;
+        this.location = location;
     }
 }

@@ -12,6 +12,8 @@ public class CompanyDto {
     private String industry;
     private String mainJobRole;
     private Integer averageScore;
+    private Integer alumnusCount;
+    private String location;
 
     public static CompanyDto from(Company company) {
         return CompanyDto.builder()
@@ -20,6 +22,8 @@ public class CompanyDto {
                 .industry(company.getIndustry())
                 .mainJobRole(company.getMainJobRole())
                 .averageScore(company.getAverageScore())
+                .alumnusCount(company.getAlumnusCount() == null ? 0 : company.getAlumnusCount())
+                .location(company.getLocation() == null ? "Seoul" : company.getLocation())
                 .build();
     }
 }

@@ -1,5 +1,7 @@
 package com.example.UniBridge.company;
 
+import com.example.UniBridge.alumnus.AlumnusListResponse;
+import com.example.UniBridge.alumnus.AlumnusService;
 import com.example.UniBridge.common.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private final AlumnusService alumnusService;
 
     @GetMapping
     @Operation(summary = "기업 목록 조회", description = "키워드, 산업군, 직무 조건으로 기업 목록을 조회합니다.")
@@ -39,6 +42,15 @@ public class CompanyController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<CompanyDto> getCompany(@PathVariable Long companyId) {
         return BaseResponse.success(companyService.getCompany(companyId));
+    }
+
+    @GetMapping("/{companyId}/alumni")
+    @Operation(summary = "기업별 동문 리스트 조회", description = "선택 기업에 합격한 동문 프로필 요약 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "동문 리스트 조회 성공")
+    @ApiResponse(responseCode = "400", description = "존재하지 않는 기업")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    public BaseResponse<List<AlumnusListResponse>> getCompanyAlumni(@PathVariable Long companyId) {
+        return BaseResponse.success("동문 리스트 조회 성공", alumnusService.getAlumniByCompany(companyId));
     }
 
     @GetMapping("/popular")

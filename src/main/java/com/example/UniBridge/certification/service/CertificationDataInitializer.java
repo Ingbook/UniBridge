@@ -1,7 +1,9 @@
 package com.example.UniBridge.certification.service;
 
 import com.example.UniBridge.certification.entity.Certification;
+import com.example.UniBridge.certification.entity.UserCertification;
 import com.example.UniBridge.certification.repository.CertificationRepository;
+import com.example.UniBridge.certification.repository.UserCertificationRepository;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -11,9 +13,11 @@ import org.springframework.context.annotation.Configuration;
 public class CertificationDataInitializer {
 
     @Bean
-    public CommandLineRunner initializeCertificationData(CertificationRepository certificationRepository) {
+    public CommandLineRunner initializeCertificationData(CertificationRepository certificationRepository,
+                                                         UserCertificationRepository userCertificationRepository) {
         return args -> {
             if (certificationRepository.count() != 0) {
+                saveDefaultUserCertifications(certificationRepository, userCertificationRepository);
                 return;
             }
 
@@ -29,7 +33,27 @@ public class CertificationDataInitializer {
                     certification("빅데이터분석기사", "DATA", 30, "빅데이터 분석 실무 역량"),
                     certification("정보보안기사", "SECURITY", 30, "보안 직무 대표 국가기술자격")
             ));
+            saveDefaultUserCertifications(certificationRepository, userCertificationRepository);
         };
+    }
+
+    private void saveDefaultUserCertifications(CertificationRepository certificationRepository,
+                                               UserCertificationRepository userCertificationRepository) {
+        if (!userCertificationRepository.findByUserId(1L).isEmpty()) {
+            return;
+        }
+
+        List<Certification> certifications = certificationRepository.findAll().stream()
+                .filter(certification -> "정보처리기사".equals(certification.getName())
+                        || "SQLD".equals(certification.getName()))
+                .toList();
+
+        userCertificationRepository.saveAll(certifications.stream()
+                .map(certification -> UserCertification.builder()
+                        .userId(1L)
+                        .certification(certification)
+                        .build())
+                .toList());
     }
 
     private Certification certification(String name, String category, Integer score, String description) {

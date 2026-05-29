@@ -1702,8 +1702,27 @@ textarea.form-control {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.42rem;
-    padding: 0.55rem;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    min-height: 150px;
+}
+
+.analysis-alumni-box.is-active {
+    border-color: rgba(139, 92, 246, 0.32);
+    background: rgba(139, 92, 246, 0.07);
+}
+
+.analysis-alumni-box small {
+    max-width: 100%;
+    color: #697386;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
 }
 
 .analysis-alumni-icon {
@@ -1834,6 +1853,113 @@ textarea.form-control {
     align-items: stretch;
 }
 
+.analysis-gap-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.9fr) minmax(300px, 1.1fr) minmax(220px, 0.9fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.analysis-spec-panel,
+.analysis-comparison-panel {
+    min-height: 320px;
+    padding: 1rem;
+    border: 1px solid rgba(78, 178, 188, 0.18);
+    border-radius: 8px;
+    background: rgba(248, 250, 252, 0.62);
+}
+
+.analysis-spec-panel h3,
+.analysis-comparison-panel h3 {
+    margin: 0 0 0.8rem;
+    color: #172033;
+    font-size: 1rem;
+    letter-spacing: 0;
+}
+
+.analysis-spec-list,
+.analysis-comparison-list {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.analysis-spec-row {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.7rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.analysis-spec-row span,
+.analysis-comparison-item span {
+    color: #697386;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.analysis-spec-row strong {
+    color: #172033;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.analysis-spec-row strong small {
+    display: block;
+    margin-top: 0.22rem;
+    color: #697386;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.analysis-comparison-item {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.78rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.analysis-comparison-item div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.analysis-comparison-item strong {
+    color: var(--uni-purple);
+    font-size: 0.95rem;
+}
+
+.analysis-comparison-item p {
+    color: #172033;
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.analysis-comparison-item small {
+    color: #697386;
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+.analysis-comparison-item em {
+    width: fit-content;
+    padding: 0.16rem 0.42rem;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 0.68rem;
+    font-style: normal;
+    font-weight: 900;
+}
+
 .analysis-chart-card {
     position: relative;
     display: grid;
@@ -1862,7 +1988,15 @@ textarea.form-control {
     display: grid;
     align-content: start;
     gap: 1.25rem;
-    padding: 0.4rem 0;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(78, 178, 188, 0.18);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.analysis-detail-card.is-collapsed {
+    display: none;
 }
 
 .analysis-detail-block h3 {
@@ -1877,6 +2011,15 @@ textarea.form-control {
     color: #697386;
     font-size: 0.92rem;
     line-height: 1.6;
+}
+
+.analysis-detail-block ul {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.55rem 0 0 1rem;
+    color: #172033;
+    font-size: 0.9rem;
+    line-height: 1.5;
 }
 
 .analysis-more-button {
@@ -1894,6 +2037,7 @@ textarea.form-control {
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 900;
+    cursor: pointer;
 }
 
 .analysis-info-section,
@@ -2107,6 +2251,8 @@ textarea.form-control {
         grid-template-columns: 220px minmax(0, 1fr);
         width: min(100% - 1.25rem, 900px);
         gap: 1rem;
+    .analysis-gap-layout {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -2271,7 +2417,8 @@ textarea.form-control {
 
     .analysis-hero-grid,
     .analysis-info-grid,
-    .analysis-recommendation-grid {
+    .analysis-recommendation-grid,
+    .analysis-gap-layout {
         grid-template-columns: 1fr;
         gap: 0.8rem;
     }

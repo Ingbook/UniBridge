@@ -13,9 +13,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import lombok.Data;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
 @Controller
 @RequiredArgsConstructor
 public class BoardController {
+
+    @Data
+    public static class BoardForm {
+        private String title;
+        private String content;
+        private Long companyId;
+        private String category;
+    }
 
     private static final String POPULAR_SORT = "popular";
 
@@ -47,6 +62,14 @@ public class BoardController {
 
         return "board";
     }
+
+    @GetMapping("/board/ask")
+    public String question(Model model) {
+        model.addAttribute("boardForm", new BoardForm());
+        model.addAttribute("companies", companyService.getCompanies(null, null, null));
+        return "board_form";
+    }
+    
 
     private String findCompanyName(List<CompanyDto> companies, Long companyId) {
         if (companyId == null) {

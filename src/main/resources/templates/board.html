@@ -42,7 +42,7 @@
                         <path d="M5 10v10h14V10"></path>
                     </svg>
                 </span>
-                <span>Home</span>
+                <span>최근</span>
             </a>
             <a class="board-nav-link"
                th:classappend="${popular} ? ' is-active'"
@@ -53,12 +53,12 @@
                         <path d="m13 2-2 8h7l-7 12 2-8H6z"></path>
                     </svg>
                 </span>
-                <span>Popular</span>
+                <span>인기</span>
             </a>
         </nav>
 
         <div class="board-company-links">
-            <p>Companies</p>
+            <p>회사 커뮤니티</p>
             <a th:each="company : ${companies}"
                class="board-company-link"
                th:classappend="${activeCompanyId != null and activeCompanyId == company.id} ? ' is-active'"
@@ -77,16 +77,16 @@
     <section class="board-feed" aria-label="Question threads">
         <header class="board-feed-header">
             <div>
-                <p th:text="${activeCompanyName != null ? 'c/' + activeCompanyName : 'All companies'}">All companies</p>
-                <h1 th:text="${popular} ? 'Popular questions' : 'Company Q&A board'">Company Q&A board</h1>
+                <p th:text="${activeCompanyName != null ? activeCompanyName + '에 질문하기' : '질문 게시판'}">All companies</p>
+                <h1 th:text="${popular} ? '추천이 많은 질문' : (${activeCompanyName != null} ? 'c/' + activeCompanyName : '최근 올라온 질문')">Company Q&A board</h1>
             </div>
-            <button class="board-write-button" type="button" aria-label="Ask a question">
+            <button class="board-write-button" type="button" aria-label="Ask a question" onclick="window.location.href='/board/ask'">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 5v14"></path>
                     <path d="M5 12h14"></path>
                 </svg>
-                <span>Ask</span>
+                <span>질문하기</span>
             </button>
         </header>
 
@@ -132,10 +132,27 @@
         </div>
 
         <div class="board-empty" th:if="${questions == null or questions.isEmpty()}">
-            <strong>No questions yet</strong>
-            <span>Once students ask questions, this feed will keep scrolling without pagination.</span>
+            <strong>404 질문이 없음 😥</strong>
+            <span>아직 등록된 질문이 없어요. 질문이 올라오면 여기서 탐색할 수 있을거에요. 😎</span>
         </div>
     </section>
 </main>
+<footer class="site-footer">
+    <div class="site-footer-inner">
+        <a class="site-footer-brand" th:href="@{/home}" href="/home">
+            <img th:src="@{/images/unibridge_logo.png}" src="/images/unibridge_logo.png"
+                 alt="UniBridge Logo">
+            <span>UniBridge</span>
+        </a>
+        <div class="site-footer-copy">
+            <strong>Connecting Seniors, Bridging Your Career.</strong>
+            <span>ⓒ 2026. UniBridge All rights reserved.</span>
+        </div>
+        <nav class="site-footer-links" aria-label="Footer quick links">
+            <a th:href="@{/help}" href="/help">help</a>
+            <a th:href="@{/login}" href="/login">login</a>
+        </nav>
+    </div>
+</footer>
 </body>
 </html>

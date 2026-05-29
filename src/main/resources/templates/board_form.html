@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>질문 등록 | UniBridge</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link rel="stylesheet" th:href="@{/css/UniBridge.css}" href="/css/UniBridge.css">
+</head>
+<body class="board-page">
+
+<main class="form-main-container">
+    <div class="board-form-container">
+        <header class="board-form-header">
+            <h1>선배들에게 질문하기</h1>
+        </header>
+
+        <form th:action="@{/board/ask}" th:object="${boardForm}" method="post">
+            <div class="form-card">
+                <div class="form-group">
+                    <label for="company-search">커뮤니티</label>
+                    <p class="form-group-description">질문을 올릴 커뮤니티를 선택하세요.</p>
+                    <input type="text" id="company-search" class="form-control" placeholder="검색 후 아래에서 선택하기...">
+                    <select id="companyId" th:field="*{companyId}" class="form-control" style="margin-top: 10px;">
+                        <option value="">커뮤니티 선택하기</option>
+                        <option th:each="company : ${companies}"
+                                th:value="${company.id}"
+                                th:text="${company.name}">Company Name</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-group">
+                    <label for="title">제목</label>
+                    <p class="form-group-description">질문은 간결하고 본문 내용을 함축하고 있으면 좋아요.</p>
+                    <input type="text" id="title" th:field="*{title}" class="form-control" placeholder="예시: 요즘 채용 분위기가 어떤가요?">
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-group">
+                    <label for="content">본문</label>
+                    <p class="form-group-description">커뮤니티 이용 수칙을 준수해주세요.</p>
+                    <textarea id="content" th:field="*{content}" class="form-control" rows="10"></textarea>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="board-write-button">질문 등록하기</button>
+                <a th:href="@{/board}" class="btn btn-secondary">취소하기</a>
+            </div>
+        </form>
+    </div>
+</main>
+<script>
+    document.getElementById('company-search').addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const select = document.getElementById('companyId');
+        const options = select.options;
+        for (let i = 1; i < options.length; i++) {
+            const option = options[i];
+            const text = option.text.toLowerCase();
+            if (text.startsWith(filter)) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    });
+</script>
+</body>
+</html>

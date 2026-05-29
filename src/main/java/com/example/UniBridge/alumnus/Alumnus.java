@@ -36,8 +36,10 @@ public class Alumnus {
     private String languageType;
     private Integer languageScore;
     private Integer certificationCount;
+    private String certificationSummary;
     private Integer awardCount;
     private String projectSummary;
+    private String portfolioDescription;
     private String portfolioLevel;
     private String profileImageUrl;
     private Integer representativeScore;
@@ -45,8 +47,8 @@ public class Alumnus {
     @Builder
     public Alumnus(Company company, String name, String jobRole, BigDecimal gpa, BigDecimal maxGpa,
                    String languageType, Integer languageScore, Integer certificationCount, Integer awardCount,
-                   String projectSummary, String portfolioLevel, String profileImageUrl,
-                   Integer representativeScore) {
+                   String certificationSummary, String projectSummary, String portfolioDescription,
+                   String portfolioLevel, String profileImageUrl, Integer representativeScore) {
         this.company = company;
         this.name = name;
         this.jobRole = jobRole;
@@ -55,8 +57,10 @@ public class Alumnus {
         this.languageType = languageType;
         this.languageScore = languageScore;
         this.certificationCount = certificationCount;
+        this.certificationSummary = certificationSummary;
         this.awardCount = awardCount;
         this.projectSummary = projectSummary;
+        this.portfolioDescription = portfolioDescription;
         this.portfolioLevel = portfolioLevel;
         this.profileImageUrl = profileImageUrl;
         this.representativeScore = representativeScore;

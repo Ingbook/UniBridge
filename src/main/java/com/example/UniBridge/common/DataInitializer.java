@@ -112,21 +112,49 @@ public class DataInitializer {
 
         private void saveDefaultSpecification() {
             specificationRepository.findByUserId(1L)
-                    .orElseGet(() -> specificationRepository.save(Specification.builder()
-                            .userId(1L)
-                            .gpa(new BigDecimal("3.8"))
-                            .maxGpa(new BigDecimal("4.5"))
-                            .build()));
+                    .ifPresentOrElse(this::fillDefaultSpecificationDetails,
+                            () -> specificationRepository.save(Specification.builder()
+                                    .userId(1L)
+                                    .gpa(new BigDecimal("3.8"))
+                                    .maxGpa(new BigDecimal("4.5"))
+                                    .awardCount(1)
+                                    .projectSummary("AI 기반 취업 분석 서비스 개발")
+                                    .portfolioDescription("AI 기반 취업 분석 서비스 개발 포트폴리오")
+                                    .build()));
+        }
+
+        private void fillDefaultSpecificationDetails(Specification specification) {
+            Integer awardCount = specification.getAwardCount() == null ? 1 : specification.getAwardCount();
+            String projectSummary = hasText(specification.getProjectSummary())
+                    ? specification.getProjectSummary()
+                    : "AI 기반 취업 분석 서비스 개발";
+            String portfolioDescription = hasText(specification.getPortfolioDescription())
+                    ? specification.getPortfolioDescription()
+                    : "AI 기반 취업 분석 서비스 개발 포트폴리오";
+            if (!awardCount.equals(specification.getAwardCount())
+                    || !projectSummary.equals(specification.getProjectSummary())
+                    || !portfolioDescription.equals(specification.getPortfolioDescription())) {
+                specification.update(specification.getGpa(), specification.getMaxGpa(), awardCount,
+                        projectSummary, portfolioDescription);
+                specificationRepository.save(specification);
+            }
+        }
+
+        private boolean hasText(String value) {
+            return value != null && !value.trim().isEmpty();
         }
 
         private void saveDefaultAlumni(Company company) {
             alumnusRepository.saveAll(List.of(
                     alumnus(company, "James Kim", company.getMainJobRole(), "4.2", 960, 5, 3,
-                            "실서비스 배포 경험과 데이터 기반 추천 프로젝트 보유", "상"),
+                            "정보처리기사, SQLD, ADsP, AWS Cloud Practitioner, 컴퓨터활용능력",
+                            "실서비스 배포 경험과 데이터 기반 추천 프로젝트 보유", "실서비스 배포와 데이터 기반 추천 포트폴리오", "상"),
                     alumnus(company, "Sarah Lee", company.getMainJobRole(), "4.0", 920, 4, 2,
-                            "협업 기반 웹 서비스 프로젝트와 운영 개선 경험 보유", "중상"),
+                            "정보처리기사, SQLD, 리눅스마스터 2급, 컴퓨터활용능력 1급",
+                            "협업 기반 웹 서비스 프로젝트와 운영 개선 경험 보유", "협업 기반 웹 서비스 개선 포트폴리오", "중상"),
                     alumnus(company, "Michael Park", company.getMainJobRole(), "4.3", 970, 6, 4,
-                            "대규모 트래픽 처리 프로젝트와 클라우드 배포 경험 보유", "상")
+                            "정보처리기사, SQLD, ADsP, AWS Cloud Practitioner, 리눅스마스터 2급, 컴퓨터활용능력 1급",
+                            "대규모 트래픽 처리 프로젝트와 클라우드 배포 경험 보유", "클라우드 배포와 운영 자동화 포트폴리오", "상")
             ));
         }
     }
@@ -148,8 +176,8 @@ public class DataInitializer {
     }
 
     private static Alumnus alumnus(Company company, String name, String jobRole, String gpa, Integer languageScore,
-                                   Integer certificationCount, Integer awardCount, String projectSummary,
-                                   String portfolioLevel) {
+                                   Integer certificationCount, Integer awardCount, String certificationSummary,
+                                   String projectSummary, String portfolioDescription, String portfolioLevel) {
         return Alumnus.builder()
                 .company(company)
                 .name(name)
@@ -159,8 +187,10 @@ public class DataInitializer {
                 .languageType("TOEIC")
                 .languageScore(languageScore)
                 .certificationCount(certificationCount)
+                .certificationSummary(certificationSummary)
                 .awardCount(awardCount)
                 .projectSummary(projectSummary)
+                .portfolioDescription(portfolioDescription)
                 .portfolioLevel(portfolioLevel)
                 .profileImageUrl("")
                 .representativeScore(82)

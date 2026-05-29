@@ -29,6 +29,6 @@ public class OllamaGapAnalysisResult {
         private String alumnusValue;
         private String gapDescription;
         private Integer aiScore;
-        private ComparisonStatus status;
+        private String status;
     }
 }

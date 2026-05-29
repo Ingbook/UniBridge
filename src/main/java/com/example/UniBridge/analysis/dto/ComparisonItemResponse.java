@@ -8,9 +8,10 @@ import lombok.Getter;
 public class ComparisonItemResponse {
 
     private String category;
+    private String displayName;
     private String userValue;
     private String alumnusValue;
     private String gapDescription;
     private Integer aiScore;
-    private ComparisonStatus status;
+    private String status;
 }

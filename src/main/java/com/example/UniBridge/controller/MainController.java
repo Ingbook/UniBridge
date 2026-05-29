@@ -41,8 +41,14 @@ public class MainController {
     @GetMapping("/analysis/{companyId}")
     public String analysis(@PathVariable Long companyId, Model model) {
         CompanyHomeDto company = companyService.getCompanyById(companyId);
+        var companyDetail = companyService.getCompany(companyId);
         model.addAttribute("companyId", companyId);
         model.addAttribute("companyName", company.getName());
+        model.addAttribute("companyIndustry", company.getCategory());
+        model.addAttribute("mainJobRole", companyDetail.getMainJobRole());
+        model.addAttribute("averageScore", companyDetail.getAverageScore() + "점");
+        model.addAttribute("alumnusCount", company.getAlumnusCount() + "명");
+        model.addAttribute("location", company.getLocation());
         return "analysis";
     }
 }

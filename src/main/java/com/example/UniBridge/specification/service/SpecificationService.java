@@ -28,7 +28,10 @@ public class SpecificationService {
 
         Specification specification = specificationRepository.findByUserId(CURRENT_USER_ID)
                 .orElseGet(() -> Specification.builder().userId(CURRENT_USER_ID).build());
-        specification.update(request.getGpa(), request.getMaxGpa());
+        specification.update(request.getGpa(), request.getMaxGpa(),
+                keepExistingWhenNull(request.getAwardCount(), specification.getAwardCount()),
+                keepExistingWhenNull(request.getProjectSummary(), specification.getProjectSummary()),
+                keepExistingWhenNull(request.getPortfolioDescription(), specification.getPortfolioDescription()));
 
         return SpecificationResponse.from(specificationRepository.save(specification));
     }
@@ -57,5 +60,13 @@ public class SpecificationService {
     private Specification getMySpecificationEntity() {
         return specificationRepository.findByUserId(CURRENT_USER_ID)
                 .orElseThrow(() -> new IllegalArgumentException("등록된 스펙 정보가 없습니다."));
+    }
+
+    private String keepExistingWhenNull(String requestedValue, String existingValue) {
+        return requestedValue == null ? existingValue : requestedValue;
+    }
+
+    private Integer keepExistingWhenNull(Integer requestedValue, Integer existingValue) {
+        return requestedValue == null ? existingValue : requestedValue;
     }
 }

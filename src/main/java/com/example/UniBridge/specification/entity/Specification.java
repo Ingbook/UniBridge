@@ -27,19 +27,35 @@ public class Specification {
     private Long userId;
     private BigDecimal gpa;
     private BigDecimal maxGpa;
+    private Integer awardCount;
+    private String projectSummary;
+    private String portfolioDescription;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     @Builder
-    public Specification(Long userId, BigDecimal gpa, BigDecimal maxGpa) {
+    public Specification(Long userId, BigDecimal gpa, BigDecimal maxGpa,
+                         Integer awardCount, String projectSummary, String portfolioDescription) {
         this.userId = userId;
         this.gpa = gpa;
         this.maxGpa = maxGpa;
+        this.awardCount = awardCount;
+        this.projectSummary = projectSummary;
+        this.portfolioDescription = portfolioDescription;
     }
 
     public void update(BigDecimal gpa, BigDecimal maxGpa) {
         this.gpa = gpa;
         this.maxGpa = maxGpa;
+    }
+
+    public void update(BigDecimal gpa, BigDecimal maxGpa, Integer awardCount,
+                       String projectSummary, String portfolioDescription) {
+        this.gpa = gpa;
+        this.maxGpa = maxGpa;
+        this.awardCount = awardCount;
+        this.projectSummary = projectSummary;
+        this.portfolioDescription = portfolioDescription;
     }
 
     @PrePersist

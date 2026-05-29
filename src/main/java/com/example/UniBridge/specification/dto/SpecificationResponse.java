@@ -13,6 +13,9 @@ public class SpecificationResponse {
     private Long userId;
     private BigDecimal gpa;
     private BigDecimal maxGpa;
+    private Integer awardCount;
+    private String projectSummary;
+    private String portfolioDescription;
 
     public static SpecificationResponse from(Specification specification) {
         return SpecificationResponse.builder()
@@ -20,6 +23,9 @@ public class SpecificationResponse {
                 .userId(specification.getUserId())
                 .gpa(specification.getGpa())
                 .maxGpa(specification.getMaxGpa())
+                .awardCount(specification.getAwardCount())
+                .projectSummary(specification.getProjectSummary())
+                .portfolioDescription(specification.getPortfolioDescription())
                 .build();
     }
 }

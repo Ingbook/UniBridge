@@ -2251,6 +2251,8 @@ textarea.form-control {
         grid-template-columns: 220px minmax(0, 1fr);
         width: min(100% - 1.25rem, 900px);
         gap: 1rem;
+    }
+
     .analysis-gap-layout {
         grid-template-columns: 1fr;
     }

@@ -7,6 +7,7 @@ import com.example.UniBridge.company.CompanyRepository;
 import com.example.UniBridge.specification.entity.Specification;
 import com.example.UniBridge.specification.repository.SpecificationRepository;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -45,23 +46,21 @@ public class DataInitializer {
         public void run(String... args) {
             saveDefaultSpecification();
             if (companyRepository.count() != 0) {
-                if (alumnusRepository.count() == 0) {
-                    companyRepository.findAll().forEach(this::saveDefaultAlumni);
-                }
+                companyRepository.findAll().forEach(this::saveDefaultAlumni);
                 return;
             }
 
             List<Company> companies = companyRepository.saveAll(List.of(
-                    company("TechCorp", "IT", "Backend Developer", 85, 3, "Seoul"),
-                    company("DataFlow", "AI/Data", "Data Analyst", 88, 3, "Seoul"),
-                    company("SecureApp", "Security", "Security Engineer", 82, 3, "Pangyo"),
-                    company("CloudNet", "Cloud", "DevOps Engineer", 84, 3, "Seoul"),
-                    company("PublicIT", "Public Sector", "IT System Manager", 79, 3, "Daegu"),
-                    company("GreenEnergy", "Energy", "IoT Engineer", 81, 3, "Daejeon"),
-                    company("FinBridge", "FinTech", "Backend Developer", 86, 3, "Seoul"),
-                    company("HealthSync", "Healthcare IT", "Full Stack Developer", 80, 3, "Seoul"),
-                    company("EduNext", "EdTech", "Frontend Developer", 78, 3, "Seoul"),
-                    company("SmartFactory", "Manufacturing IT", "Embedded Software Engineer", 83, 3, "Gumi"),
+                    company("TechCorp", "IT", "Backend Developer", 85, "Seoul"),
+                    company("DataFlow", "AI/Data", "Data Analyst", 88, "Seoul"),
+                    company("SecureApp", "Security", "Security Engineer", 82, "Pangyo"),
+                    company("CloudNet", "Cloud", "DevOps Engineer", 84, "Seoul"),
+                    company("PublicIT", "Public Sector", "IT System Manager", 79, "Daegu"),
+                    company("GreenEnergy", "Energy", "IoT Engineer", 81, "Daejeon"),
+                    company("FinBridge", "FinTech", "Backend Developer", 86, "Seoul"),
+                    company("HealthSync", "Healthcare IT", "Full Stack Developer", 80, "Seoul"),
+                    company("EduNext", "EdTech", "Frontend Developer", 78, "Seoul"),
+                    company("SmartFactory", "Manufacturing IT", "Embedded Software Engineer", 83, "Gumi"),
 
                     company("RoboWorks", "Robotics", "Robotics Software Engineer", 87),
                     company("MediaPulse", "Media Platform", "Frontend Developer", 77),
@@ -145,39 +144,56 @@ public class DataInitializer {
         }
 
         private void saveDefaultAlumni(Company company) {
-            alumnusRepository.saveAll(List.of(
-                    alumnus(company, "James Kim", company.getMainJobRole(), "4.2", 960, 5, 3,
-                            "정보처리기사, SQLD, ADsP, AWS Cloud Practitioner, 컴퓨터활용능력",
-                            "실서비스 배포 경험과 데이터 기반 추천 프로젝트 보유", "실서비스 배포와 데이터 기반 추천 포트폴리오", "상"),
-                    alumnus(company, "Sarah Lee", company.getMainJobRole(), "4.0", 920, 4, 2,
-                            "정보처리기사, SQLD, 리눅스마스터 2급, 컴퓨터활용능력 1급",
-                            "협업 기반 웹 서비스 프로젝트와 운영 개선 경험 보유", "협업 기반 웹 서비스 개선 포트폴리오", "중상"),
-                    alumnus(company, "Michael Park", company.getMainJobRole(), "4.3", 970, 6, 4,
-                            "정보처리기사, SQLD, ADsP, AWS Cloud Practitioner, 리눅스마스터 2급, 컴퓨터활용능력 1급",
-                            "대규모 트래픽 처리 프로젝트와 클라우드 배포 경험 보유", "클라우드 배포와 운영 자동화 포트폴리오", "상")
-            ));
+            long existingCount = alumnusRepository.countByCompanyId(company.getId());
+            int targetCount = desiredAlumnusCount(company.getName());
+            if (existingCount >= targetCount) {
+                return;
+            }
+
+            List<Alumnus> alumni = new ArrayList<>();
+            for (int index = (int) existingCount; index < targetCount; index++) {
+                alumni.add(alumnus(company, index));
+            }
+            alumnusRepository.saveAll(alumni);
         }
     }
 
     private static Company company(String name, String industry, String mainJobRole, Integer averageScore) {
-        return company(name, industry, mainJobRole, averageScore, 3, "Seoul");
+        return company(name, industry, mainJobRole, averageScore, "Seoul");
     }
 
     private static Company company(String name, String industry, String mainJobRole, Integer averageScore,
-                                   Integer alumnusCount, String location) {
+                                   String location) {
         return Company.builder()
                 .name(name)
                 .industry(industry)
                 .mainJobRole(mainJobRole)
                 .averageScore(averageScore)
-                .alumnusCount(alumnusCount)
+                .alumnusCount(desiredAlumnusCount(name))
                 .location(location)
                 .build();
     }
 
+    private static Alumnus alumnus(Company company, int index) {
+        String name = alumnusName(company.getName(), index);
+        String jobRole = jobRole(company, index);
+        int score = 70 + Math.floorMod(company.getName().hashCode() + index * 7, 26);
+        int languageScore = 820 + Math.floorMod(company.getName().hashCode() + index * 17, 16) * 10;
+        int certificationCount = 2 + Math.floorMod(company.getName().hashCode() + index, 5);
+        int awardCount = Math.floorMod(company.getName().hashCode() + index * 3, 5);
+        String gpa = "%.1f".formatted(3.5 + Math.floorMod(company.getName().hashCode() + index, 9) / 10.0);
+        String certificationSummary = certificationSummary(index, certificationCount);
+        String projectSummary = "%s 분야 %s 프로젝트 경험 보유".formatted(company.getIndustry(), jobRole);
+        String portfolioDescription = "%s 직무 중심 포트폴리오".formatted(jobRole);
+        String portfolioLevel = index % 3 == 0 ? "상" : index % 3 == 1 ? "중상" : "중";
+        return alumnus(company, name, jobRole, gpa, languageScore, certificationCount, awardCount,
+                certificationSummary, projectSummary, portfolioDescription, portfolioLevel, score);
+    }
+
     private static Alumnus alumnus(Company company, String name, String jobRole, String gpa, Integer languageScore,
                                    Integer certificationCount, Integer awardCount, String certificationSummary,
-                                   String projectSummary, String portfolioDescription, String portfolioLevel) {
+                                   String projectSummary, String portfolioDescription, String portfolioLevel,
+                                   Integer representativeScore) {
         return Alumnus.builder()
                 .company(company)
                 .name(name)
@@ -193,7 +209,54 @@ public class DataInitializer {
                 .portfolioDescription(portfolioDescription)
                 .portfolioLevel(portfolioLevel)
                 .profileImageUrl("")
-                .representativeScore(82)
+                .representativeScore(representativeScore)
                 .build();
+    }
+
+    private static int desiredAlumnusCount(String companyName) {
+        return switch (companyName) {
+            case "DeepVision" -> 7;
+            case "DataMind" -> 9;
+            case "AIWorks" -> 5;
+            case "VisionLab" -> 8;
+            case "QuantumSoft" -> 6;
+            case "NovaPlatform" -> 11;
+            default -> 3 + Math.floorMod(companyName.hashCode(), 10);
+        };
+    }
+
+    private static String alumnusName(String companyName, int index) {
+        String[] firstNames = {"James", "Sarah", "Michael", "Emily", "Daniel", "Hannah", "David", "Olivia",
+                "Kevin", "Sophia", "Jason", "Grace"};
+        String[] lastNames = {"Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Yoon", "Lim", "Han", "Seo"};
+        int offset = Math.floorMod(companyName.hashCode(), firstNames.length);
+        return firstNames[(offset + index) % firstNames.length] + " "
+                + lastNames[Math.floorMod(offset + index * 2, lastNames.length)];
+    }
+
+    private static String jobRole(Company company, int index) {
+        String industry = company.getIndustry() == null ? "" : company.getIndustry().toLowerCase();
+        String[] roles;
+        if (industry.contains("vision")) {
+            roles = new String[]{"Computer Vision Engineer", "AI Engineer", "Machine Learning Engineer"};
+        } else if (industry.contains("ai") || industry.contains("data")) {
+            roles = new String[]{"AI Engineer", "Data Scientist", "Machine Learning Engineer", "Data Engineer"};
+        } else if (industry.contains("platform")) {
+            roles = new String[]{"Platform Engineer", "Backend Developer", "Product Backend Developer"};
+        } else if (industry.contains("cloud")) {
+            roles = new String[]{"Cloud Engineer", "DevOps Engineer", "Platform Engineer"};
+        } else {
+            roles = new String[]{company.getMainJobRole(), "Backend Developer", "Platform Engineer", "Data Scientist"};
+        }
+        return roles[index % roles.length];
+    }
+
+    private static String certificationSummary(int index, int certificationCount) {
+        String[] certifications = {"정보처리기사", "SQLD", "ADsP", "AWS Cloud Practitioner", "리눅스마스터 2급", "컴퓨터활용능력 1급"};
+        List<String> selected = new ArrayList<>();
+        for (int i = 0; i < certificationCount; i++) {
+            selected.add(certifications[(index + i) % certifications.length]);
+        }
+        return String.join(", ", selected);
     }
 }

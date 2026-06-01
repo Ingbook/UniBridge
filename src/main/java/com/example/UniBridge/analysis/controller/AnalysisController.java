@@ -1,11 +1,14 @@
 package com.example.UniBridge.analysis.controller;
 
+import com.example.UniBridge.analysis.dto.AiProfileAnalysisRequest;
+import com.example.UniBridge.analysis.dto.AiProfileAnalysisResponse;
 import com.example.UniBridge.analysis.dto.AnalysisReportResponse;
 import com.example.UniBridge.analysis.dto.GapAnalysisRequest;
 import com.example.UniBridge.analysis.dto.GapAnalysisResponse;
 import com.example.UniBridge.analysis.dto.GpaCertificationAnalysisRequest;
 import com.example.UniBridge.analysis.service.AnalysisService;
 import com.example.UniBridge.analysis.service.GapAnalysisService;
+import com.example.UniBridge.analysis.service.ProfileAnalysisService;
 import com.example.UniBridge.common.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,6 +30,7 @@ public class AnalysisController {
 
     private final AnalysisService analysisService;
     private final GapAnalysisService gapAnalysisService;
+    private final ProfileAnalysisService profileAnalysisService;
 
     @PostMapping("/gpa-certification")
     @Operation(summary = "학점 및 자격증 기반 분석 실행", description = "학점과 보유 자격증 점수로 기업 평균 점수와 비교합니다.")
@@ -46,6 +50,17 @@ public class AnalysisController {
     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<GapAnalysisResponse> analyzeGap(@RequestBody GapAnalysisRequest request) {
         return BaseResponse.success("AI Gap Analysis 성공", gapAnalysisService.analyzeGap(request));
+    }
+
+    @PostMapping("/profile")
+    @Operation(summary = "AI 프로필 분석 실행", description = "사용자가 입력한 프로필 값을 검증한 뒤 AI 분석 결과를 반환합니다.")
+    @ApiResponse(responseCode = "200", description = "AI 프로필 분석 성공")
+    @ApiResponse(responseCode = "400", description = "잘못된 학점 또는 허용되지 않은 자격증")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    public BaseResponse<AiProfileAnalysisResponse> analyzeProfile(
+            @RequestBody AiProfileAnalysisRequest request
+    ) {
+        return BaseResponse.success("사용자 프로필 분석이 완료되었습니다.", profileAnalysisService.analyzeProfile(request));
     }
 
     @GetMapping("/me")

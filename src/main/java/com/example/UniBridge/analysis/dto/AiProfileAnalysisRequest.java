@@ -1,18 +1,19 @@
-package com.example.UniBridge.specification.dto;
+package com.example.UniBridge.analysis.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class SpecificationRequest {
+public class AiProfileAnalysisRequest {
 
+    private String name;
     private BigDecimal gpa;
-    private BigDecimal maxGpa;
     private String languageType;
     private Integer languageScore;
+    private List<String> certifications;
     private Integer awardCount;
-    private String projectSummary;
-    private String portfolioDescription;
+    private String project;
 }

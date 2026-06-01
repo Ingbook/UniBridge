@@ -13,6 +13,8 @@ public class SpecificationResponse {
     private Long userId;
     private BigDecimal gpa;
     private BigDecimal maxGpa;
+    private String languageType;
+    private Integer languageScore;
     private Integer awardCount;
     private String projectSummary;
     private String portfolioDescription;
@@ -23,6 +25,8 @@ public class SpecificationResponse {
                 .userId(specification.getUserId())
                 .gpa(specification.getGpa())
                 .maxGpa(specification.getMaxGpa())
+                .languageType(specification.getLanguageType())
+                .languageScore(specification.getLanguageScore())
                 .awardCount(specification.getAwardCount())
                 .projectSummary(specification.getProjectSummary())
                 .portfolioDescription(specification.getPortfolioDescription())

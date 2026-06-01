@@ -29,6 +29,8 @@ public class SpecificationService {
         Specification specification = specificationRepository.findByUserId(CURRENT_USER_ID)
                 .orElseGet(() -> Specification.builder().userId(CURRENT_USER_ID).build());
         specification.update(request.getGpa(), request.getMaxGpa(),
+                keepExistingWhenNull(request.getLanguageType(), specification.getLanguageType()),
+                keepExistingWhenNull(request.getLanguageScore(), specification.getLanguageScore()),
                 keepExistingWhenNull(request.getAwardCount(), specification.getAwardCount()),
                 keepExistingWhenNull(request.getProjectSummary(), specification.getProjectSummary()),
                 keepExistingWhenNull(request.getPortfolioDescription(), specification.getPortfolioDescription()));

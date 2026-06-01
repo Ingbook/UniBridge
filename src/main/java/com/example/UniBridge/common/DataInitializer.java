@@ -116,6 +116,8 @@ public class DataInitializer {
                                     .userId(1L)
                                     .gpa(new BigDecimal("3.8"))
                                     .maxGpa(new BigDecimal("4.5"))
+                                    .languageType("TOEIC")
+                                    .languageScore(850)
                                     .awardCount(1)
                                     .projectSummary("AI 기반 취업 분석 서비스 개발")
                                     .portfolioDescription("AI 기반 취업 분석 서비스 개발 포트폴리오")
@@ -124,6 +126,8 @@ public class DataInitializer {
 
         private void fillDefaultSpecificationDetails(Specification specification) {
             Integer awardCount = specification.getAwardCount() == null ? 1 : specification.getAwardCount();
+            String languageType = hasText(specification.getLanguageType()) ? specification.getLanguageType() : "TOEIC";
+            Integer languageScore = specification.getLanguageScore() == null ? 850 : specification.getLanguageScore();
             String projectSummary = hasText(specification.getProjectSummary())
                     ? specification.getProjectSummary()
                     : "AI 기반 취업 분석 서비스 개발";
@@ -131,9 +135,11 @@ public class DataInitializer {
                     ? specification.getPortfolioDescription()
                     : "AI 기반 취업 분석 서비스 개발 포트폴리오";
             if (!awardCount.equals(specification.getAwardCount())
+                    || !languageType.equals(specification.getLanguageType())
+                    || !languageScore.equals(specification.getLanguageScore())
                     || !projectSummary.equals(specification.getProjectSummary())
                     || !portfolioDescription.equals(specification.getPortfolioDescription())) {
-                specification.update(specification.getGpa(), specification.getMaxGpa(), awardCount,
+                specification.update(specification.getGpa(), specification.getMaxGpa(), languageType, languageScore, awardCount,
                         projectSummary, portfolioDescription);
                 specificationRepository.save(specification);
             }

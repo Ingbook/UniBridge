@@ -11,6 +11,8 @@ public class ComparisonItemResponse {
     private String displayName;
     private String userValue;
     private String alumnusValue;
+    private Integer score;
+    private String comment;
     private String gapDescription;
     private Integer aiScore;
     private String status;

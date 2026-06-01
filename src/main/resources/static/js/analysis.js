@@ -26,6 +26,8 @@ const categoryLabels = {
     LANGUAGE: '어학성적',
     CERTIFICATION: '자격증',
     AWARD: '수상경력',
+    PROJECT: '프로젝트',
+    PORTFOLIO: '포트폴리오',
     PROJECT_PORTFOLIO: '프로젝트/포트폴리오'
 };
 
@@ -144,26 +146,30 @@ function setLoading() {
 }
 
 function renderAnalysis(data) {
-    totalScore.textContent = data.totalScore;
-    scoreMeter.style.width = `${data.totalScore}%`;
+    const score = data.overallScore ?? data.totalScore ?? 0;
+    const summary = data.summarized ?? data.summary ?? '';
+    const selectedProfile = data.selectedAlumnusProfile ?? data.alumnusProfile;
+    const items = data.gapItems ?? data.comparisonItems ?? [];
+    totalScore.textContent = score;
+    scoreMeter.style.width = `${score}%`;
     scoreDescription.textContent = data.scoreDescription;
-    analysisSummary.textContent = data.summary;
+    analysisSummary.textContent = summary;
     renderProfile(userProfile, data.userProfile);
-    renderProfile(alumnusProfile, data.alumnusProfile);
-    comparisonItems.innerHTML = data.comparisonItems.map(item => `
+    renderProfile(alumnusProfile, selectedProfile);
+    comparisonItems.innerHTML = items.map(item => `
         <div class="analysis-comparison-item">
             <div>
                 <span>${item.displayName || categoryLabels[item.category] || item.category}</span>
-                <strong>${item.aiScore}점</strong>
+                <strong>${item.score ?? item.aiScore}점</strong>
             </div>
             <p>${item.userValue} → ${item.alumnusValue}</p>
-            <small>${item.gapDescription}</small>
+            <small>${item.comment ?? item.gapDescription}</small>
             <em>${item.status}</em>
         </div>
     `).join('');
-    renderList(strengthList, data.detailAnalysis.strengths);
-    renderList(weaknessList, data.detailAnalysis.weaknesses);
-    renderList(commentList, data.detailAnalysis.comments);
+    renderList(strengthList, data.detailAnalysis?.strengths);
+    renderList(weaknessList, data.detailAnalysis?.weaknesses);
+    renderList(commentList, data.detailAnalysis?.comments);
 }
 
 prevBtn.addEventListener('click', () => {

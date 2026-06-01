@@ -40,15 +40,15 @@ public class GapAnalysisService {
     private static final String DEFAULT_LANGUAGE_TYPE = "TOEIC";
     private static final Integer DEFAULT_LANGUAGE_SCORE = 850;
     private static final String DEFAULT_PORTFOLIO_LEVEL = "기본";
-    private static final String PROJECT_DESCRIPTION_FALLBACK = "설명 보완 필요";
     private static final List<String> CATEGORIES = List.of(
-            "GPA", "LANGUAGE", "CERTIFICATION", "AWARD", "PROJECT_PORTFOLIO");
+            "GPA", "LANGUAGE", "CERTIFICATION", "AWARD", "PROJECT", "PORTFOLIO");
     private static final Map<String, String> DISPLAY_NAMES = Map.of(
             "GPA", "학점",
             "LANGUAGE", "어학성적",
             "CERTIFICATION", "자격증",
             "AWARD", "수상경력",
-            "PROJECT_PORTFOLIO", "프로젝트/포트폴리오"
+            "PROJECT", "프로젝트",
+            "PORTFOLIO", "포트폴리오"
     );
 
     private final SpecificationService specificationService;
@@ -56,6 +56,7 @@ public class GapAnalysisService {
     private final AlumnusRepository alumnusRepository;
     private final UserCertificationRepository userCertificationRepository;
     private final OllamaGapAnalysisClient ollamaGapAnalysisClient;
+    private final AnalysisScoreCalculator analysisScoreCalculator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional(readOnly = true)
@@ -70,6 +71,8 @@ public class GapAnalysisService {
 
         SpecProfileResponse userProfile = createUserProfile(specification);
         SpecProfileResponse alumnusProfile = createAlumnusProfile(alumnus);
+        AnalysisScoreCalculator.AnalysisScoreResult scoreResult = analysisScoreCalculator.calculate(
+                userProfile, alumnusProfile);
         OllamaGapAnalysisResult aiResult = analyzeWithOllama(company, request.getTargetJobRole(),
                 userProfile, alumnusProfile);
         aiResult = normalizeResult(aiResult, userProfile, alumnusProfile);
@@ -77,17 +80,25 @@ public class GapAnalysisService {
         return GapAnalysisResponse.builder()
                 .companyId(company.getId())
                 .companyName(company.getName())
+                .selectedAlumnusId(alumnus.getId())
+                .selectedAlumnusName(alumnusProfile.getName())
                 .targetJobRole(hasText(request.getTargetJobRole()) ? request.getTargetJobRole() : alumnus.getJobRole())
-                .totalScore(clamp(aiResult.getTotalScore(), 0, 100))
-                .scoreDescription(defaultText(aiResult.getScoreDescription(), "AI 분석을 바탕으로 준비도를 산출했습니다."))
-                .summary(defaultText(aiResult.getSummary(), "동문 스펙과 비교한 보완 우선순위를 확인해 주세요."))
+                .overallScore(scoreResult.overallScore())
+                .totalScore(scoreResult.overallScore())
+                .scoreDescription(scoreResult.scoreDescription())
+                .summarized(scoreResult.summarized())
+                .summary(scoreResult.summarized())
                 .userProfile(userProfile)
+                .selectedAlumnusProfile(alumnusProfile)
                 .alumnusProfile(alumnusProfile)
-                .comparisonItems(toComparisonItems(aiResult, userProfile, alumnusProfile))
+                .gapItems(scoreResult.gapItems())
+                .comparisonItems(scoreResult.gapItems())
                 .detailAnalysis(AiDetailAnalysisResponse.builder()
-                        .strengths(emptyToDefault(aiResult.getStrengths(), "현재 보유한 직무 경험을 중심으로 강점을 정리해 주세요."))
-                        .weaknesses(emptyToDefault(aiResult.getWeaknesses(), "프로젝트 성과와 설명을 더 구체화해야 합니다."))
-                        .comments(emptyToDefault(aiResult.getComments(), "Ollama 응답을 해석하지 못해 기본 안내를 제공합니다."))
+                        .strengths(emptyToDefault(aiResult.getStrengths(),
+                                "현재 입력된 스펙 중 점수가 높은 항목을 중심으로 강점을 정리해 주세요."))
+                        .weaknesses(emptyToDefault(aiResult.getWeaknesses(),
+                                "점수가 낮은 Gap 항목부터 구체적으로 보완해 주세요."))
+                        .comments(emptyToDefault(aiResult.getComments(), scoreResult.summarized()))
                         .build())
                 .build();
     }
@@ -112,15 +123,16 @@ public class GapAnalysisService {
                 .filter(this::hasText)
                 .map(String::trim)
                 .toList();
-        String projectSummary = resolveProjectDescription(specification.getProjectSummary());
-        String portfolioDescription = resolveProjectDescription(specification.getPortfolioDescription());
+        certificationNames = analysisScoreCalculator.validCertificationNames(certificationNames);
+        String projectSummary = analysisScoreCalculator.normalizeDescription(specification.getProjectSummary());
+        String portfolioDescription = analysisScoreCalculator.normalizeDescription(specification.getPortfolioDescription());
         return SpecProfileResponse.builder()
                 .name(DEFAULT_USER_NAME)
                 .profileImageUrl("")
                 .gpa(specification.getGpa())
                 .maxGpa(specification.getMaxGpa())
-                .languageType(DEFAULT_LANGUAGE_TYPE)
-                .languageScore(DEFAULT_LANGUAGE_SCORE)
+                .languageType(defaultText(specification.getLanguageType(), DEFAULT_LANGUAGE_TYPE))
+                .languageScore(specification.getLanguageScore() == null ? DEFAULT_LANGUAGE_SCORE : specification.getLanguageScore())
                 .certificationCount(certificationNames.size())
                 .certificationNames(certificationNames)
                 .awardCount(safeCount(specification.getAwardCount()))
@@ -131,10 +143,11 @@ public class GapAnalysisService {
     }
 
     private SpecProfileResponse createAlumnusProfile(Alumnus alumnus) {
-        List<String> certificationNames = parseCertificationNames(alumnus.getCertificationSummary());
+        List<String> certificationNames = analysisScoreCalculator.validCertificationNamesFromText(
+                alumnus.getCertificationSummary());
         int certificationCount = alumnus.getCertificationCount() == null
                 ? certificationNames.size()
-                : alumnus.getCertificationCount();
+                : Math.min(alumnus.getCertificationCount(), certificationNames.size());
         return SpecProfileResponse.builder()
                 .name(defaultText(alumnus.getName(), "동문"))
                 .profileImageUrl(defaultText(alumnus.getProfileImageUrl(), ""))
@@ -145,8 +158,8 @@ public class GapAnalysisService {
                 .certificationCount(certificationCount)
                 .certificationNames(certificationNames)
                 .awardCount(alumnus.getAwardCount() == null ? 0 : alumnus.getAwardCount())
-                .projectSummary(resolveProjectDescription(alumnus.getProjectSummary()))
-                .portfolioDescription(resolveProjectDescription(alumnus.getPortfolioDescription()))
+                .projectSummary(analysisScoreCalculator.normalizeDescription(alumnus.getProjectSummary()))
+                .portfolioDescription(analysisScoreCalculator.normalizeDescription(alumnus.getPortfolioDescription()))
                 .portfolioLevel(defaultText(alumnus.getPortfolioLevel(), "보통"))
                 .build();
     }
@@ -180,18 +193,18 @@ public class GapAnalysisService {
                         "실제 설명 내용을 기준으로 판단한다.",
                         "직무 연관성", "구현 난이도", "기술 스택 적합성", "문제 해결 과정의 구체성",
                         "결과물 완성도", "설명 가능성", "배포/운영 경험 여부"),
-                "notice", "프로젝트/포트폴리오 설명이 비어 있는 경우에만 설명 보완 필요로 판단한다."
+                "notice", "프로젝트/포트폴리오 설명이 비어 있거나 너무 짧은 경우에만 설명 보완 필요로 판단한다."
         ));
 
         return """
                 너는 취업 스펙 비교 분석 AI다. 반드시 JSON만 반환해라.
                 markdown, 설명 문장, 코드블록을 포함하지 마라.
                 동문 스펙은 합격 기준 참고 데이터이며 절대적인 정답은 아니다.
-                평가 항목 category는 GPA, LANGUAGE, CERTIFICATION, AWARD, PROJECT_PORTFOLIO로 고정한다.
-                각 항목은 0~100점으로 평가하고 totalScore도 0~100점으로 산출한다.
+                평가 항목 category는 GPA, LANGUAGE, CERTIFICATION, AWARD, PROJECT, PORTFOLIO로 고정한다.
+                각 항목은 0~100점으로 평가하되 서버 정량 점수가 최종 기준이다.
                 CERTIFICATION은 자격증 이름과 목표 직무 관련성을 반드시 함께 평가한다.
                 AWARD는 수상 개수를 기준으로 비교한다.
-                PROJECT_PORTFOLIO는 실제 projectSummary와 portfolioDescription 내용을 기준으로 평가한다.
+                PROJECT와 PORTFOLIO는 실제 projectSummary와 portfolioDescription 내용을 기준으로 평가한다.
                 사용자의 강점은 합격 동문과 비교했을 때 우위이거나 경쟁력 있는 부분으로 작성한다.
                 약점은 보완이 필요한 부분으로 작성한다.
                 comments는 한국어 3~4문장으로 작성한다.
@@ -201,9 +214,9 @@ public class GapAnalysisService {
 
                 응답 JSON 스키마:
                 {
-                  "totalScore": 82,
-                  "scoreDescription": "상위 동문 평균과 가까운 준비도입니다.",
-                  "summary": "직무 경험은 좋고 프로젝트 설명 보강이 필요합니다.",
+                  "totalScore": 0,
+                  "scoreDescription": "선택 동문 기준 준비도 설명",
+                  "summary": "사용자 입력 내용을 기반으로 한 한 문장 요약",
                   "items": [
                     {
                       "category": "GPA",
@@ -235,8 +248,8 @@ public class GapAnalysisService {
         values.put("certificationCount", safeCount(profile.getCertificationCount()));
         values.put("certificationNames", safeList(profile.getCertificationNames()));
         values.put("awardCount", safeCount(profile.getAwardCount()));
-        values.put("projectSummary", resolveProjectDescription(profile.getProjectSummary()));
-        values.put("portfolioDescription", resolveProjectDescription(profile.getPortfolioDescription()));
+        values.put("projectSummary", analysisScoreCalculator.normalizeDescription(profile.getProjectSummary()));
+        values.put("portfolioDescription", analysisScoreCalculator.normalizeDescription(profile.getPortfolioDescription()));
         return values;
     }
 
@@ -310,7 +323,7 @@ public class GapAnalysisService {
                 .map(category -> fallbackItem(category, userProfile, alumnusProfile))
                 .toList());
         result.setStrengths(List.of("현재 입력된 스펙을 기준으로 직무 관련 경험을 정리할 수 있습니다."));
-        result.setWeaknesses(List.of("AI 상세 판단을 완료하지 못했습니다.", "프로젝트/포트폴리오 설명 보완 필요"));
+        result.setWeaknesses(List.of("AI 상세 판단을 완료하지 못했습니다.", "점수가 낮은 Gap 항목부터 보완해 주세요."));
         result.setComments(List.of(
                 "현재는 기본 안내 메시지를 제공합니다.",
                 "Ollama 서버와 모델 설정을 확인한 뒤 다시 분석해 주세요.",
@@ -338,7 +351,8 @@ public class GapAnalysisService {
             case "CERTIFICATION" -> formatCertificationValue(profile.getCertificationNames(),
                     safeCount(profile.getCertificationCount()));
             case "AWARD" -> "%d개".formatted(safeCount(profile.getAwardCount()));
-            case "PROJECT_PORTFOLIO" -> resolveProjectDescription(profile.getProjectSummary());
+            case "PROJECT" -> analysisScoreCalculator.normalizeDescription(profile.getProjectSummary());
+            case "PORTFOLIO" -> analysisScoreCalculator.normalizeDescription(profile.getPortfolioDescription());
             default -> "";
         };
     }
@@ -346,7 +360,7 @@ public class GapAnalysisService {
     private String formatCertificationValue(List<String> names, int count) {
         List<String> safeNames = safeList(names);
         if (safeNames.isEmpty()) {
-            return "총 %d개".formatted(count);
+            return "인정 자격증 0개";
         }
 
         int displayLimit = 3;
@@ -357,11 +371,7 @@ public class GapAnalysisService {
         if (remainingCount > 0) {
             displayedNames += " 외 %d개".formatted(remainingCount);
         }
-        return "%s / 총 %d개".formatted(displayedNames, count);
-    }
-
-    private String resolveProjectDescription(String description) {
-        return hasText(description) ? description.trim() : PROJECT_DESCRIPTION_FALLBACK;
+        return "%s / 인정 자격증 %d개".formatted(displayedNames, safeNames.size());
     }
 
     private List<String> parseCertificationNames(String certificationSummary) {
@@ -383,7 +393,9 @@ public class GapAnalysisService {
             case "LANGUAGE", "Language" -> "LANGUAGE";
             case "CERTIFICATION", "Certifications", "Certification" -> "CERTIFICATION";
             case "AWARD", "Awards", "Award" -> "AWARD";
-            case "PROJECT_PORTFOLIO", "ProjectPortfolio", "Project_Portfolio" -> "PROJECT_PORTFOLIO";
+            case "PROJECT", "Project" -> "PROJECT";
+            case "PORTFOLIO", "Portfolio" -> "PORTFOLIO";
+            case "PROJECT_PORTFOLIO", "ProjectPortfolio", "Project_Portfolio" -> "PROJECT";
             default -> null;
         };
     }

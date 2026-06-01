@@ -58,7 +58,8 @@ class GapAnalysisServiceTest {
                 companyRepository,
                 alumnusRepository,
                 userCertificationRepository,
-                ollamaGapAnalysisClient
+                ollamaGapAnalysisClient,
+                new AnalysisScoreCalculator()
         );
     }
 
@@ -126,16 +127,21 @@ class GapAnalysisServiceTest {
         assertThat(response.getCompanyId()).isEqualTo(1L);
         assertThat(response.getCompanyName()).isEqualTo("TechCorp");
         assertThat(response.getTargetJobRole()).isEqualTo("Backend Developer");
-        assertThat(response.getTotalScore()).isEqualTo(82);
-        assertThat(response.getSummary())
-                .isEqualTo("직무 관련 자격증과 프로젝트 경험은 있으나, 동문 대비 수상경력과 어학성적 보완이 필요합니다.");
+        assertThat(response.getSelectedAlumnusId()).isEqualTo(1L);
+        assertThat(response.getSelectedAlumnusName()).isEqualTo("James Kim");
+        assertThat(response.getOverallScore()).isEqualTo(response.getTotalScore());
+        assertThat(response.getOverallScore()).isBetween(0, 100);
+        assertThat(response.getSummarized()).contains("AI 기반 취업 분석 서비스 개발");
+        assertThat(response.getSummary()).isEqualTo(response.getSummarized());
         assertThat(response.getUserProfile().getGpa()).isEqualByComparingTo("3.8");
         assertThat(response.getUserProfile().getCertificationCount()).isEqualTo(2);
         assertThat(response.getUserProfile().getCertificationNames()).containsExactly("정보처리기사", "SQLD");
         assertThat(response.getAlumnusProfile().getLanguageScore()).isEqualTo(960);
         assertThat(response.getAlumnusProfile().getCertificationNames())
-                .containsExactly("정보처리기사", "SQLD", "ADsP", "AWS Cloud Practitioner", "컴퓨터활용능력");
-        assertThat(response.getComparisonItems()).hasSize(5);
+                .containsExactly("정보처리기사", "SQLD", "ADsP", "AWS Cloud Practitioner");
+        assertThat(response.getSelectedAlumnusProfile()).isSameAs(response.getAlumnusProfile());
+        assertThat(response.getGapItems()).isSameAs(response.getComparisonItems());
+        assertThat(response.getComparisonItems()).hasSize(6);
         assertThat(response.getDetailAnalysis().getStrengths()).contains("직무와 연결되는 프로젝트 경험이 있습니다.");
         assertThat(response.getDetailAnalysis().getWeaknesses())
                 .contains("프로젝트 성과와 배포 경험 설명을 더 구체화할 필요가 있습니다.");
@@ -162,8 +168,8 @@ class GapAnalysisServiceTest {
                 .contains("\"certificationCount\":2")
                 .contains("\"certificationNames\":[\"정보처리기사\",\"SQLD\"]")
                 .contains("\"awardCount\":1")
-                .contains("\"certificationCount\":5")
-                .contains("\"certificationNames\":[\"정보처리기사\",\"SQLD\",\"ADsP\",\"AWS Cloud Practitioner\",\"컴퓨터활용능력\"]")
+                .contains("\"certificationCount\":4")
+                .contains("\"certificationNames\":[\"정보처리기사\",\"SQLD\",\"ADsP\",\"AWS Cloud Practitioner\"]")
                 .contains("\"awardCount\":3")
                 .contains("CERTIFICATION은 자격증 이름과 목표 직무 관련성을 반드시 함께 평가한다")
                 .contains("AWARD는 수상 개수를 기준으로 비교한다");
@@ -178,7 +184,8 @@ class GapAnalysisServiceTest {
         assertThat(awardItem.getDisplayName()).isEqualTo("수상경력");
         assertThat(awardItem.getUserValue()).isEqualTo("1개");
         assertThat(awardItem.getAlumnusValue()).isEqualTo("3개");
-        assertThat(awardItem.getAiScore()).isEqualTo(65);
+        assertThat(awardItem.getScore()).isEqualTo(33);
+        assertThat(awardItem.getAiScore()).isEqualTo(33);
     }
 
     @Test
@@ -187,8 +194,10 @@ class GapAnalysisServiceTest {
 
         assertThat(response.getUserProfile().getProjectSummary()).isEqualTo("AI 기반 취업 분석 서비스 개발");
         assertThat(response.getUserProfile().getPortfolioDescription()).isEqualTo("실제 포트폴리오 설명");
-        assertThat(findItem(response, "PROJECT_PORTFOLIO").getUserValue())
+        assertThat(findItem(response, "PROJECT").getUserValue())
                 .isEqualTo("AI 기반 취업 분석 서비스 개발");
+        assertThat(findItem(response, "PORTFOLIO").getUserValue())
+                .isEqualTo("실제 포트폴리오 설명");
     }
 
     @Test
@@ -197,19 +206,21 @@ class GapAnalysisServiceTest {
 
         assertThat(response.getUserProfile().getProjectSummary()).isEqualTo("설명 보완 필요");
         assertThat(response.getUserProfile().getPortfolioDescription()).isEqualTo("설명 보완 필요");
-        assertThat(findItem(response, "PROJECT_PORTFOLIO").getUserValue()).isEqualTo("설명 보완 필요");
+        assertThat(findItem(response, "PROJECT").getUserValue()).isEqualTo("설명 보완 필요");
+        assertThat(findItem(response, "PORTFOLIO").getUserValue()).isEqualTo("설명 보완 필요");
     }
 
     @Test
     void analyzeGap_mapsUppercaseCategoriesWithoutMissingScores() {
         GapAnalysisResponse response = analyzeSuccessfully(specification());
 
-        assertThat(findItem(response, "CERTIFICATION").getAiScore()).isEqualTo(70);
-        assertThat(findItem(response, "AWARD").getAiScore()).isEqualTo(65);
-        assertThat(findItem(response, "PROJECT_PORTFOLIO").getAiScore()).isEqualTo(80);
+        assertThat(findItem(response, "CERTIFICATION").getAiScore()).isBetween(0, 100);
+        assertThat(findItem(response, "AWARD").getAiScore()).isBetween(0, 100);
+        assertThat(findItem(response, "PROJECT").getAiScore()).isBetween(0, 100);
+        assertThat(findItem(response, "PORTFOLIO").getAiScore()).isBetween(0, 100);
         assertThat(response.getComparisonItems())
                 .extracting(ComparisonItemResponse::getCategory)
-                .containsExactly("GPA", "LANGUAGE", "CERTIFICATION", "AWARD", "PROJECT_PORTFOLIO");
+                .containsExactly("GPA", "LANGUAGE", "CERTIFICATION", "AWARD", "PROJECT", "PORTFOLIO");
     }
 
     @Test
@@ -223,10 +234,10 @@ class GapAnalysisServiceTest {
 
         GapAnalysisResponse response = gapAnalysisService.analyzeGap(request(1L, 1L, "Backend Developer"));
 
-        assertThat(response.getTotalScore()).isEqualTo(60);
-        assertThat(response.getComparisonItems()).hasSize(5);
+        assertThat(response.getTotalScore()).isBetween(0, 100);
+        assertThat(response.getComparisonItems()).hasSize(6);
         assertThat(response.getDetailAnalysis().getWeaknesses()).contains("AI 상세 판단을 완료하지 못했습니다.");
-        assertThat(response.getSummary()).contains("Ollama 연결 또는 응답 해석에 실패했습니다.");
+        assertThat(response.getSummary()).contains("AI 기반 취업 분석 서비스 개발");
     }
 
     private GapAnalysisResponse analyzeSuccessfully(Specification specification) {

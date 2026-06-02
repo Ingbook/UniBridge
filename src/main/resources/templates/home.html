@@ -34,24 +34,22 @@
         <h1>최근 인기가 많은 기업들이에요</h1>
     </header>
 
+    <!--
+        Controller should provide: List<FeaturedCompany> featuredCompanies
+        FeaturedCompany properties: id, name, category, alumnusCount, detailUrl
+    -->
     <section class="home-panel-grid" aria-label="UniBridge main panels">
         <a th:each="company : ${featuredCompanies}"
            th:if="${featuredCompanies != null and !featuredCompanies.isEmpty()}"
            class="home-panel"
            th:href="@{${company.detailUrl}}">
             <div class="home-panel-art" aria-hidden="true">
-                <img th:src="@{${company.logo}}" alt="Company Logo" class="company-logo">
+                <!-- Optional: Add company logo here -->
             </div>
             <p th:text="${company.category}">직군</p>
             <h2 th:text="${company.name}">Company Name</h2>
             <div class="home-panel-line"></div>
-            <span class="home-panel-alumni">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <span th:text="${company.alumnusCount + ' 명의 동문이 근무 중이에요'}">동문 수</span>
-            </span>
+            <span th:text="${company.alumnusCount + ' 명의 동문이 근무 중이에요'}">동문 수</span>
         </a>
     </section>
 
@@ -70,6 +68,14 @@
         </a>
     </section>
 
+    <!--
+        Controller should provide: List<RecommendedCompany> recommendedCompanies
+        RecommendedCompany properties: id, name, category, alumnusCount, location, detailUrl
+
+        For pagination:
+        - currentPage (int)
+        - totalPages (int)
+    -->
     <section class="company-list-shell" id="company-list" aria-label="Scrollable company list">
         <div class="company-list-heading">
             <span></span>

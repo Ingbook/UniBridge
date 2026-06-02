@@ -19,7 +19,7 @@ import com.example.UniBridge.certification.repository.UserCertificationRepositor
 import com.example.UniBridge.company.Company;
 import com.example.UniBridge.company.CompanyRepository;
 import com.example.UniBridge.specification.entity.Specification;
-import com.example.UniBridge.specification.repository.SpecificationRepository;
+import com.example.UniBridge.specification.service.SpecificationService;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,7 +38,7 @@ class AnalysisServiceTest {
     private AnalysisReportRepository analysisReportRepository;
 
     @Mock
-    private SpecificationRepository specificationRepository;
+    private SpecificationService specificationService;
 
     @Mock
     private CompanyRepository companyRepository;
@@ -62,9 +62,19 @@ class AnalysisServiceTest {
     }
 
     @Test
-    void calculateGpaScore_returnsZero_whenGpaIsInvalid() {
-        assertThat(analysisService.calculateGpaScore(specification(null, "4.5"))).isEqualTo(0);
-        assertThat(analysisService.calculateGpaScore(specification("3.0", "0"))).isEqualTo(0);
+    void calculateGpaScore_throwsException_whenGpaIsInvalid() {
+        assertThatThrownBy(() -> analysisService.calculateGpaScore(specification(null, "4.5")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("학점을 입력해 주세요.");
+        assertThatThrownBy(() -> analysisService.calculateGpaScore(specification("3.0", "0")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("최대 학점은 0보다 커야 합니다.");
+        assertThatThrownBy(() -> analysisService.calculateGpaScore(specification("-1", "4.5")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("학점은 0 이상이어야 합니다.");
+        assertThatThrownBy(() -> analysisService.calculateGpaScore(specification("4.6", "4.5")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("학점은 최대 학점보다 클 수 없습니다.");
     }
 
     @Test
@@ -106,7 +116,7 @@ class AnalysisServiceTest {
         );
         GpaCertificationAnalysisRequest request = analysisRequest(1L);
 
-        when(specificationRepository.findByUserId(1L)).thenReturn(Optional.of(specification));
+        when(specificationService.getMySpecificationEntityForAnalysis()).thenReturn(specification);
         when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
         when(userCertificationRepository.findByUserId(1L)).thenReturn(userCertifications);
         when(localAiAnalysisService.analyzeSpec(eq(84), eq(50), eq(70), eq(85), eq(15),
@@ -197,7 +207,7 @@ class AnalysisServiceTest {
     @Test
     void analyzeGpaAndCertification_throwsException_whenCompanyDoesNotExist() {
         GpaCertificationAnalysisRequest request = analysisRequest(999L);
-        when(specificationRepository.findByUserId(1L)).thenReturn(Optional.of(specification("3.8", "4.5")));
+        when(specificationService.getMySpecificationEntityForAnalysis()).thenReturn(specification("3.8", "4.5"));
         when(companyRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> analysisService.analyzeGpaAndCertification(request))
@@ -215,17 +225,11 @@ class AnalysisServiceTest {
     }
 
     private Specification specification(String gpa, String maxGpa) {
-        Specification spec = Specification.builder().userId(1L).build();
-        spec.update(
-                gpa == null ? null : new BigDecimal(gpa),
-                maxGpa == null ? null : new BigDecimal(maxGpa),
-                "TOEIC",
-                900,
-                1,
-                "Project",
-                "Portfolio"
-        );
-        return spec;
+        return Specification.builder()
+                .userId(1L)
+                .gpa(gpa == null ? null : new BigDecimal(gpa))
+                .maxGpa(maxGpa == null ? null : new BigDecimal(maxGpa))
+                .build();
     }
 
     private Certification certification(String name, Integer score) {
@@ -245,7 +249,7 @@ class AnalysisServiceTest {
     }
 
     private void prepareAnalysis(List<UserCertification> userCertifications) {
-        when(specificationRepository.findByUserId(1L)).thenReturn(Optional.of(specification("3.8", "4.5")));
+        when(specificationService.getMySpecificationEntityForAnalysis()).thenReturn(specification("3.8", "4.5"));
         when(companyRepository.findById(1L)).thenReturn(Optional.of(company("TechCorp", 85)));
         when(userCertificationRepository.findByUserId(1L)).thenReturn(userCertifications);
     }

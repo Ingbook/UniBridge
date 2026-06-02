@@ -7,6 +7,6 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     List<Company> findTop5ByOrderByAverageScoreDesc();
 
-    List<Company> findTop8ByOrderByAverageScoreDesc();
+    List<Company> findTop6ByOrderByAverageScoreDesc();
 
 }

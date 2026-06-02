@@ -16,4 +16,5 @@ public class AiProfileAnalysisRequest {
     private List<String> certifications;
     private Integer awardCount;
     private String project;
+    private String portfolio;
 }

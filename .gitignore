@@ -38,8 +38,3 @@ out/
 ### VS Code ###
 .vscode/
 src/main/resources/application.properties
-src/main/resources/application.properties
-src/main/resources/application-mysql.properties
-src/main/resources/application.properties
-.gradle-home/wrapper/dists/gradle-9.4.1-bin/arn2x92ynaizyzdaamcbpbhtj/gradle-9.4.1-bin.zip.lck
-.gradle-home/wrapper/dists/gradle-9.4.1-bin/arn2x92ynaizyzdaamcbpbhtj/gradle-9.4.1-bin.zip.part

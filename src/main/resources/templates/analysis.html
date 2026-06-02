@@ -48,7 +48,7 @@
     <section class="analysis-hero-grid">
         <article class="analysis-profile-card">
             <div class="analysis-company-art" aria-hidden="true">
-                <!-- Company logo will be inserted here -->
+                <img th:if="${companyName}" th:src="@{/images/{name}.png(name=${companyName})}" th:alt="${companyName} + ' 로고'" onerror="this.style.display='none'">
             </div>
             <span>기업 로고</span>
         </article>
@@ -147,7 +147,22 @@
             </article>
         </div>
 
-        <button class="analysis-more-button" id="detailToggle" type="button">상세 분석 보기</button>
+        <div class="analysis-action-buttons">
+            <button class="analysis-more-button" id="editProfileBtn" type="button" onclick="openProfileEditPopup()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                내 프로필 수정
+            </button>
+            <button class="analysis-more-button" id="detailToggle" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <path d="M6 9l6 6 6-6"></path>
+                </svg>
+                상세 분석 보기
+            </button>
+        </div>
+
         <article class="analysis-detail-card is-collapsed" id="detailAnalysis">
             <div class="analysis-detail-block">
                 <span>Strengths</span>
@@ -181,28 +196,6 @@
         </div>
     </section>
 
-    <section class="analysis-recommendation-section" aria-labelledby="recommendation-title">
-        <div class="analysis-section-label">
-            <span></span>
-            <h2 id="recommendation-title">Company Recommendation</h2>
-        </div>
-        <div class="analysis-recommendation-grid">
-            <article class="analysis-alumni-card">
-                <div class="company-avatar" aria-hidden="true">A</div>
-                <div class="company-copy">
-                    <strong>Name</strong>
-                    <small>Alumnus · Backend Engineer</small>
-                </div>
-            </article>
-            <article class="analysis-alumni-card">
-                <div class="company-avatar" aria-hidden="true">B</div>
-                <div class="company-copy">
-                    <strong>Name</strong>
-                    <small>Alumnus · Product Manager</small>
-                </div>
-            </article>
-        </div>
-    </section>
 </main>
 
 <footer class="site-footer">
@@ -222,6 +215,16 @@
         </nav>
     </div>
 </footer>
+
+<script>
+    function openProfileEditPopup() {
+        const width = 800;
+        const height = 600;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        window.open('/profile/edit', 'ProfileEdit', `width=${width},height=${height},top=${top},left=${left}`);
+    }
+</script>
 
 <script th:src="@{/js/analysis.js}" src="/js/analysis.js"></script>
 </body>

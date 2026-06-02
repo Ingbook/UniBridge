@@ -2,12 +2,18 @@ package com.example.UniBridge.analysis.service;
 
 import com.example.UniBridge.alumnus.Alumnus;
 import com.example.UniBridge.alumnus.AlumnusRepository;
-import com.example.UniBridge.analysis.dto.AiDetailAnalysisResponse;
+import com.example.UniBridge.analysis.dto.AnalysisProfileResponse;
+import com.example.UniBridge.analysis.dto.CertificationValue;
 import com.example.UniBridge.analysis.dto.ComparisonItemResponse;
 import com.example.UniBridge.analysis.dto.ComparisonStatus;
+import com.example.UniBridge.analysis.dto.FieldComment;
+import com.example.UniBridge.analysis.dto.FieldCommentsResponse;
+import com.example.UniBridge.analysis.dto.GapItemResponse;
 import com.example.UniBridge.analysis.dto.GapAnalysisRequest;
 import com.example.UniBridge.analysis.dto.GapAnalysisResponse;
+import com.example.UniBridge.analysis.dto.LanguageValue;
 import com.example.UniBridge.analysis.dto.OllamaGapAnalysisResult;
+import com.example.UniBridge.analysis.dto.OverallCommentResponse;
 import com.example.UniBridge.analysis.dto.SpecProfileResponse;
 import com.example.UniBridge.analysis.ollama.OllamaGapAnalysisClient;
 import com.example.UniBridge.certification.entity.Certification;
@@ -20,7 +26,6 @@ import com.example.UniBridge.specification.service.SpecificationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,30 +81,18 @@ public class GapAnalysisService {
         OllamaGapAnalysisResult aiResult = analyzeWithOllama(company, request.getTargetJobRole(),
                 userProfile, alumnusProfile);
         aiResult = normalizeResult(aiResult, userProfile, alumnusProfile);
+        List<GapItemResponse> gapItems = createGapItems(scoreResult, aiResult, userProfile, alumnusProfile);
+        FieldCommentsResponse fieldComments = createFieldComments(gapItems);
 
         return GapAnalysisResponse.builder()
-                .companyId(company.getId())
-                .companyName(company.getName())
-                .selectedAlumnusId(alumnus.getId())
-                .selectedAlumnusName(alumnusProfile.getName())
-                .targetJobRole(hasText(request.getTargetJobRole()) ? request.getTargetJobRole() : alumnus.getJobRole())
-                .overallScore(scoreResult.overallScore())
-                .totalScore(scoreResult.overallScore())
-                .scoreDescription(scoreResult.scoreDescription())
+                .currentUser(toProfileResponse(userProfile))
+                .selectedAlumnus(toProfileResponse(alumnusProfile))
+                .gapItems(gapItems)
+                .fieldComments(fieldComments)
+                .overallComment(createOverallComment(aiResult, scoreResult))
+                .scoreDescription(defaultText(aiResult.getScoreDescription(), scoreResult.scoreDescription()))
                 .summarized(scoreResult.summarized())
-                .summary(scoreResult.summarized())
-                .userProfile(userProfile)
-                .selectedAlumnusProfile(alumnusProfile)
-                .alumnusProfile(alumnusProfile)
-                .gapItems(scoreResult.gapItems())
-                .comparisonItems(scoreResult.gapItems())
-                .detailAnalysis(AiDetailAnalysisResponse.builder()
-                        .strengths(emptyToDefault(aiResult.getStrengths(),
-                                "현재 입력된 스펙 중 점수가 높은 항목을 중심으로 강점을 정리해 주세요."))
-                        .weaknesses(emptyToDefault(aiResult.getWeaknesses(),
-                                "점수가 낮은 Gap 항목부터 구체적으로 보완해 주세요."))
-                        .comments(emptyToDefault(aiResult.getComments(), scoreResult.summarized()))
-                        .build())
+                .summary(defaultText(aiResult.getSummary(), scoreResult.summarized()))
                 .build();
     }
 
@@ -116,14 +109,15 @@ public class GapAnalysisService {
     }
 
     private SpecProfileResponse createUserProfile(Specification specification) {
-        List<String> certificationNames = userCertificationRepository.findByUserId(CURRENT_USER_ID).stream()
+        List<String> requestedCertificationNames = userCertificationRepository.findByUserId(CURRENT_USER_ID).stream()
                 .map(UserCertification::getCertification)
                 .filter(Objects::nonNull)
                 .map(Certification::getName)
                 .filter(this::hasText)
                 .map(String::trim)
                 .toList();
-        certificationNames = analysisScoreCalculator.validCertificationNames(certificationNames);
+        validateAllowedCertifications(requestedCertificationNames);
+        List<String> certificationNames = analysisScoreCalculator.validCertificationNames(requestedCertificationNames);
         String projectSummary = analysisScoreCalculator.normalizeDescription(specification.getProjectSummary());
         String portfolioDescription = analysisScoreCalculator.normalizeDescription(specification.getPortfolioDescription());
         return SpecProfileResponse.builder()
@@ -253,6 +247,166 @@ public class GapAnalysisService {
         return values;
     }
 
+    private AnalysisProfileResponse toProfileResponse(SpecProfileResponse profile) {
+        return AnalysisProfileResponse.builder()
+                .name(defaultText(profile.getName(), ""))
+                .gpa(profile.getGpa())
+                .language(languageValue(profile))
+                .certifications(certificationValue(profile))
+                .awardCount(safeCount(profile.getAwardCount()))
+                .project(analysisScoreCalculator.normalizeDescription(profile.getProjectSummary()))
+                .portfolio(analysisScoreCalculator.normalizeDescription(profile.getPortfolioDescription()))
+                .build();
+    }
+
+    private List<GapItemResponse> createGapItems(AnalysisScoreCalculator.AnalysisScoreResult scoreResult,
+                                                 OllamaGapAnalysisResult aiResult,
+                                                 SpecProfileResponse userProfile,
+                                                 SpecProfileResponse alumnusProfile) {
+        Map<String, ComparisonItemResponse> scoreItems = new LinkedHashMap<>();
+        scoreResult.gapItems().forEach(item -> scoreItems.put(item.getCategory(), item));
+
+        Map<String, OllamaGapAnalysisResult.Item> aiItems = new LinkedHashMap<>();
+        aiResult.getItems().forEach(item -> {
+            if (item != null && hasText(item.getCategory())) {
+                aiItems.put(item.getCategory(), item);
+            }
+        });
+
+        return CATEGORIES.stream()
+                .map(category -> createGapItem(category, scoreItems.get(category), aiItems.get(category),
+                        userProfile, alumnusProfile))
+                .toList();
+    }
+
+    private GapItemResponse createGapItem(String category, ComparisonItemResponse scoreItem,
+                                          OllamaGapAnalysisResult.Item aiItem,
+                                          SpecProfileResponse userProfile,
+                                          SpecProfileResponse alumnusProfile) {
+        if (scoreItem == null) {
+            scoreItem = toComparisonItem(category, aiItem, userProfile, alumnusProfile);
+        }
+        String currentValue = valueFor(category, userProfile);
+        String alumnusValue = valueFor(category, alumnusProfile);
+        String message = aiItem == null ? null : aiItem.getGapDescription();
+        if (!hasText(message)) {
+            message = scoreItem.getComment();
+        }
+        String comment = defaultText(fieldCommentFor(category, message, userProfile),
+                "%s 항목은 선택 동문 기준으로 추가 확인이 필요합니다.".formatted(DISPLAY_NAMES.getOrDefault(category, category)));
+        return GapItemResponse.builder()
+                .field(fieldName(category))
+                .label(DISPLAY_NAMES.getOrDefault(category, category))
+                .currentValue(currentValue)
+                .alumnusValue(alumnusValue)
+                .displayText("%s → %s".formatted(currentValue, alumnusValue))
+                .score(aiItem == null || aiItem.getAiScore() == null
+                        ? scoreItem.getScore()
+                        : clamp(aiItem.getAiScore(), 0, 100))
+                .status(aiItem == null ? scoreItem.getStatus() : normalizeStatus(aiItem.getStatus()))
+                .message(defaultText(message, "%s 항목은 선택 동문 기준으로 비교가 필요합니다."
+                        .formatted(DISPLAY_NAMES.getOrDefault(category, category))))
+                .comment(comment)
+                .build();
+    }
+
+    private FieldCommentsResponse createFieldComments(List<GapItemResponse> gapItems) {
+        Map<String, GapItemResponse> itemMap = new LinkedHashMap<>();
+        gapItems.forEach(item -> itemMap.put(item.getField(), item));
+        return FieldCommentsResponse.builder()
+                .name(FieldComment.builder()
+                        .label("이름")
+                        .message("현재 사용자 프로필이 정상적으로 입력되었습니다.")
+                        .comment("이름은 비교 점수 산정 대상은 아니지만, 분석 결과에서 현재 사용자와 선택 동문을 구분하기 위해 사용됩니다.")
+                        .build())
+                .gpa(toFieldComment(itemMap.get("gpa")))
+                .language(toFieldComment(itemMap.get("language")))
+                .certifications(toFieldComment(itemMap.get("certifications")))
+                .awardCount(toFieldComment(itemMap.get("awardCount")))
+                .project(toFieldComment(itemMap.get("project")))
+                .portfolio(toFieldComment(itemMap.get("portfolio")))
+                .build();
+    }
+
+    private FieldComment toFieldComment(GapItemResponse item) {
+        return FieldComment.builder()
+                .label(item.getLabel())
+                .message(defaultText(item.getMessage(), "%s 항목은 선택 동문 기준으로 비교가 필요합니다.".formatted(item.getLabel())))
+                .comment(defaultText(item.getComment(), "%s 항목의 보완 방향을 구체적으로 정리해 주세요.".formatted(item.getLabel())))
+                .build();
+    }
+
+    private OverallCommentResponse createOverallComment(OllamaGapAnalysisResult aiResult,
+                                                        AnalysisScoreCalculator.AnalysisScoreResult scoreResult) {
+        List<String> comments = emptyToDefault(aiResult.getComments(), scoreResult.summarized());
+        return OverallCommentResponse.builder()
+                .strengths(emptyToDefault(aiResult.getStrengths(),
+                        "현재 입력된 스펙 중 점수가 높은 항목을 중심으로 강점을 정리해 주세요."))
+                .weaknesses(emptyToDefault(aiResult.getWeaknesses(),
+                        "점수가 낮은 Gap 항목부터 구체적으로 보완해 주세요."))
+                .aiComment(String.join(" ", comments))
+                .build();
+    }
+
+    private LanguageValue languageValue(SpecProfileResponse profile) {
+        String type = defaultText(profile.getLanguageType(), DEFAULT_LANGUAGE_TYPE);
+        Integer score = profile.getLanguageScore();
+        return LanguageValue.builder()
+                .type(type)
+                .score(score)
+                .build();
+    }
+
+    private CertificationValue certificationValue(SpecProfileResponse profile) {
+        List<String> names = safeList(profile.getCertificationNames());
+        return CertificationValue.builder()
+                .items(names)
+                .count(names.size())
+                .build();
+    }
+
+    private void validateAllowedCertifications(List<String> certificationNames) {
+        List<String> invalidNames = certificationNames.stream()
+                .filter(name -> analysisScoreCalculator.validCertificationNames(List.of(name)).isEmpty())
+                .toList();
+        if (!invalidNames.isEmpty()) {
+            throw new IllegalArgumentException("입력 가능한 자격증은 정보처리기사, SQLD, ADsP, AWS Cloud Practitioner, 리눅스마스터 2급, 컴퓨터활용능력 1급입니다.");
+        }
+    }
+
+    private String fieldName(String category) {
+        return switch (category) {
+            case "GPA" -> "gpa";
+            case "LANGUAGE" -> "language";
+            case "CERTIFICATION" -> "certifications";
+            case "AWARD" -> "awardCount";
+            case "PROJECT" -> "project";
+            case "PORTFOLIO" -> "portfolio";
+            default -> category.toLowerCase();
+        };
+    }
+
+    private String fieldCommentFor(String category, String message, SpecProfileResponse userProfile) {
+        return switch (category) {
+            case "GPA" -> "학점은 기본 역량을 보여주는 지표입니다. 현재 학점도 활용 가능하지만, 선택 동문과 비교해 보완 방향을 확인해 주세요.";
+            case "LANGUAGE" -> "어학성적은 글로벌 업무 가능성과 기본 성실성을 보여줄 수 있습니다. 목표 기업 기준에 맞춰 점수 향상 여부를 점검해 주세요.";
+            case "CERTIFICATION" -> certificationComment(userProfile);
+            case "AWARD" -> "수상경력은 프로젝트 결과물의 객관적인 성과를 보여주는 요소입니다. 공모전, 해커톤, 교내 경진대회 참여를 통해 보완할 수 있습니다.";
+            case "PROJECT" -> "현재 프로젝트 주제는 좋지만, 단순 개발 경험보다 배포 여부, 사용자 입력 처리, 데이터 분석 방식, AI 분석 로직 등을 구체적으로 설명하는 것이 필요합니다.";
+            case "PORTFOLIO" -> "포트폴리오에는 프로젝트 개요, 사용 기술, 담당 역할, 문제 해결 과정, GitHub 링크, 배포 링크, 결과 화면을 포함하는 것이 좋습니다.";
+            default -> message;
+        };
+    }
+
+    private String certificationComment(SpecProfileResponse userProfile) {
+        List<String> names = safeList(userProfile.getCertificationNames());
+        if (names.isEmpty()) {
+            return "인정 자격증이 없으면 직무 기초 역량을 보여줄 근거가 부족할 수 있습니다. 목표 직무와 관련된 자격증을 보완해 주세요.";
+        }
+        return "%s 보유는 개발 직무에서 기본 전공 역량을 보여줄 수 있는 강점입니다. 현재 자격증 항목은 경쟁력으로 활용할 수 있습니다."
+                .formatted(String.join(", ", names));
+    }
+
     private OllamaGapAnalysisResult normalizeResult(OllamaGapAnalysisResult result, SpecProfileResponse userProfile,
                                                     SpecProfileResponse alumnusProfile) {
         if (result == null) {
@@ -278,21 +432,6 @@ public class GapAnalysisService {
         item.setCategory(normalizedCategory);
         item.setStatus(normalizeStatus(item.getStatus()));
         return item;
-    }
-
-    private List<ComparisonItemResponse> toComparisonItems(OllamaGapAnalysisResult result,
-                                                           SpecProfileResponse userProfile,
-                                                           SpecProfileResponse alumnusProfile) {
-        Map<String, OllamaGapAnalysisResult.Item> itemMap = new LinkedHashMap<>();
-        result.getItems().forEach(item -> {
-            if (item != null && hasText(item.getCategory())) {
-                itemMap.put(item.getCategory(), item);
-            }
-        });
-
-        return CATEGORIES.stream()
-                .map(category -> toComparisonItem(category, itemMap.get(category), userProfile, alumnusProfile))
-                .toList();
     }
 
     private ComparisonItemResponse toComparisonItem(String category, OllamaGapAnalysisResult.Item item,
@@ -372,16 +511,6 @@ public class GapAnalysisService {
             displayedNames += " 외 %d개".formatted(remainingCount);
         }
         return "%s / 인정 자격증 %d개".formatted(displayedNames, safeNames.size());
-    }
-
-    private List<String> parseCertificationNames(String certificationSummary) {
-        if (!hasText(certificationSummary)) {
-            return List.of();
-        }
-        return Arrays.stream(certificationSummary.split(","))
-                .map(String::trim)
-                .filter(this::hasText)
-                .toList();
     }
 
     private String normalizeCategory(String category) {

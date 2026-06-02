@@ -56,12 +56,13 @@ class ProfileAnalysisServiceTest {
     @Test
     void analyzeProfile_returnsRequestedJsonShapeAndSavesProfile() {
         AiProfileAnalysisRequest request = request("3.8", "TOEIC", 850,
-                List.of("정보처리기사", "SQLD"), 1, "AI 기반 취업 분석 서비스 개발");
+                List.of("정보처리기사", "SQLD"), 1, "AI 기반 취업 분석 서비스 개발", "GitHub와 배포 링크 포함");
         AiProfileAnalysisResponse.AiAnalysis aiResponse = analysis();
         when(specificationRepository.findByUserId(1L)).thenReturn(Optional.of(specification()));
         when(certificationRepository.findByName("정보처리기사")).thenReturn(Optional.of(certification("정보처리기사")));
         when(certificationRepository.findByName("SQLD")).thenReturn(Optional.of(certification("SQLD")));
         when(localAiAnalysisService.analyzeProfile(any())).thenReturn(aiResponse);
+        ArgumentCaptor<Specification> specificationCaptor = ArgumentCaptor.forClass(Specification.class);
 
         AiProfileAnalysisResponse response = profileAnalysisService.analyzeProfile(request);
 
@@ -74,9 +75,12 @@ class ProfileAnalysisServiceTest {
         assertThat(response.getUserProfile().getCertifications().getCount()).isEqualTo(2);
         assertThat(response.getUserProfile().getAwardCount()).isEqualTo(1);
         assertThat(response.getUserProfile().getProject()).isEqualTo("AI 기반 취업 분석 서비스 개발");
+        assertThat(response.getUserProfile().getPortfolio()).isEqualTo("GitHub와 배포 링크 포함");
         assertThat(response.getAiAnalysis()).isSameAs(aiResponse);
 
-        verify(specificationRepository).save(any(Specification.class));
+        verify(specificationRepository).save(specificationCaptor.capture());
+        assertThat(specificationCaptor.getValue().getProjectSummary()).isEqualTo("AI 기반 취업 분석 서비스 개발");
+        assertThat(specificationCaptor.getValue().getPortfolioDescription()).isEqualTo("GitHub와 배포 링크 포함");
         verify(userCertificationRepository).deleteByUserId(1L);
         verify(userCertificationRepository, times(2)).save(any());
     }
@@ -84,7 +88,7 @@ class ProfileAnalysisServiceTest {
     @Test
     void analyzeProfile_removesDuplicateCertificationsBeforeSavingAndAnalysis() {
         AiProfileAnalysisRequest request = request("3.8", "TOEIC", 850,
-                List.of("정보처리기사", "SQLD", "정보처리기사"), 1, "프로젝트 설명");
+                List.of("정보처리기사", "SQLD", "정보처리기사"), 1, "프로젝트 설명", "포트폴리오 설명");
         when(specificationRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(certificationRepository.findByName("정보처리기사")).thenReturn(Optional.of(certification("정보처리기사")));
         when(certificationRepository.findByName("SQLD")).thenReturn(Optional.of(certification("SQLD")));
@@ -97,6 +101,7 @@ class ProfileAnalysisServiceTest {
         verify(localAiAnalysisService).analyzeProfile(captor.capture());
         assertThat(captor.getValue().getCertifications().getItems()).containsExactly("정보처리기사", "SQLD");
         assertThat(captor.getValue().getCertifications().getCount()).isEqualTo(2);
+        assertThat(captor.getValue().getPortfolio()).isEqualTo("포트폴리오 설명");
     }
 
     @Test
@@ -165,8 +170,31 @@ class ProfileAnalysisServiceTest {
         assertThat(response.getAiAnalysis().getComment()).contains("프로젝트 설명 보완 필요");
     }
 
+    @Test
+    void analyzeProfile_returnsPortfolioFallback_whenPortfolioIsBlank() {
+        AiProfileAnalysisRequest request = request("3.8", "TOEIC", 850,
+                List.of("정보처리기사"), 1, "프로젝트 설명", " ");
+        when(specificationRepository.findByUserId(1L)).thenReturn(Optional.of(specification()));
+        when(certificationRepository.findByName("정보처리기사")).thenReturn(Optional.of(certification("정보처리기사")));
+        doThrow(new RuntimeException("ollama unavailable"))
+                .when(localAiAnalysisService)
+                .analyzeProfile(any());
+
+        AiProfileAnalysisResponse response = profileAnalysisService.analyzeProfile(request);
+
+        assertThat(response.getUserProfile().getPortfolio()).isEmpty();
+        assertThat(response.getAiAnalysis().getWeaknesses()).anyMatch(value -> value.contains("포트폴리오 설명 보완 필요"));
+        assertThat(response.getAiAnalysis().getComment()).contains("포트폴리오 설명 보완 필요");
+    }
+
     private AiProfileAnalysisRequest request(String gpa, String languageType, Integer languageScore,
                                              List<String> certifications, Integer awardCount, String project) {
+        return request(gpa, languageType, languageScore, certifications, awardCount, project, "포트폴리오 설명");
+    }
+
+    private AiProfileAnalysisRequest request(String gpa, String languageType, Integer languageScore,
+                                             List<String> certifications, Integer awardCount, String project,
+                                             String portfolio) {
         AiProfileAnalysisRequest request = new AiProfileAnalysisRequest();
         ReflectionTestUtils.setField(request, "gpa", gpa == null ? null : new BigDecimal(gpa));
         ReflectionTestUtils.setField(request, "languageType", languageType);
@@ -174,6 +202,7 @@ class ProfileAnalysisServiceTest {
         ReflectionTestUtils.setField(request, "certifications", certifications);
         ReflectionTestUtils.setField(request, "awardCount", awardCount);
         ReflectionTestUtils.setField(request, "project", project);
+        ReflectionTestUtils.setField(request, "portfolio", portfolio);
         return request;
     }
 

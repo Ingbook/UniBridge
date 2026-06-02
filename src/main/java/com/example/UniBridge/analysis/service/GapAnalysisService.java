@@ -22,7 +22,7 @@ import com.example.UniBridge.certification.repository.UserCertificationRepositor
 import com.example.UniBridge.company.Company;
 import com.example.UniBridge.company.CompanyRepository;
 import com.example.UniBridge.specification.entity.Specification;
-import com.example.UniBridge.specification.repository.SpecificationRepository;
+import com.example.UniBridge.specification.service.SpecificationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -56,7 +56,7 @@ public class GapAnalysisService {
             "PORTFOLIO", "포트폴리오"
     );
 
-    private final SpecificationRepository specificationRepository;
+    private final SpecificationService specificationService;
     private final CompanyRepository companyRepository;
     private final AlumnusRepository alumnusRepository;
     private final UserCertificationRepository userCertificationRepository;
@@ -68,7 +68,7 @@ public class GapAnalysisService {
     public GapAnalysisResponse analyzeGap(GapAnalysisRequest request) {
         validateRequest(request);
 
-        Specification specification = specificationRepository.findByUserId(CURRENT_USER_ID).orElse(new Specification(CURRENT_USER_ID));
+        Specification specification = specificationService.getMySpecificationEntityForAnalysis();
         Company company = companyRepository.findById(request.getCompanyId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 기업입니다."));
         Alumnus alumnus = alumnusRepository.findByCompanyIdAndId(request.getCompanyId(), request.getAlumnusId())

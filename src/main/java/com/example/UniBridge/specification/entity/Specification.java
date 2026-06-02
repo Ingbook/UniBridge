@@ -36,8 +36,30 @@ public class Specification {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Specification(Long userId) {
+    public Specification(Long userId, BigDecimal gpa, BigDecimal maxGpa, String languageType, Integer languageScore,
+                         Integer awardCount, String projectSummary, String portfolioDescription) {
         this.userId = userId;
+        this.gpa = gpa;
+        this.maxGpa = maxGpa;
+        this.languageType = languageType;
+        this.languageScore = languageScore;
+        this.awardCount = awardCount;
+        this.projectSummary = projectSummary;
+        this.portfolioDescription = portfolioDescription;
+    }
+
+    public void update(BigDecimal gpa, BigDecimal maxGpa) {
+        this.gpa = gpa;
+        this.maxGpa = maxGpa;
+    }
+
+    public void update(BigDecimal gpa, BigDecimal maxGpa, Integer awardCount,
+                       String projectSummary, String portfolioDescription) {
+        this.gpa = gpa;
+        this.maxGpa = maxGpa;
+        this.awardCount = awardCount;
+        this.projectSummary = projectSummary;
+        this.portfolioDescription = portfolioDescription;
     }
 
     public void update(BigDecimal gpa, BigDecimal maxGpa, String languageType, Integer languageScore,

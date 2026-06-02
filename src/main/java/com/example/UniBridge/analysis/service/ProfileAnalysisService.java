@@ -51,19 +51,18 @@ public class ProfileAnalysisService {
         Integer awardCount = normalizeAwardCount(request.getAwardCount());
         String languageType = normalizeText(request.getLanguageType());
         String project = normalizeText(request.getProject());
-        String portfolio = normalizeText(request.getPortfolio());
 
         validateGpa(request.getGpa());
         validateLanguage(languageType, request.getLanguageScore());
         validateAwardCount(awardCount);
         validateCertifications(certifications);
 
-        saveSpecification(request.getGpa(), languageType, request.getLanguageScore(), awardCount, project, portfolio);
+        saveSpecification(request.getGpa(), languageType, request.getLanguageScore(), awardCount, project);
         saveUserCertifications(certifications);
 
         AiProfileAnalysisResponse.UserProfile userProfile =
                 createUserProfile(request.getGpa(), languageType, request.getLanguageScore(), certifications,
-                        awardCount, project, portfolio);
+                        awardCount, project);
         AiProfileAnalysisResponse.AiAnalysis analysis;
         try {
             analysis = localAiAnalysisService.analyzeProfile(userProfile);
@@ -78,10 +77,10 @@ public class ProfileAnalysisService {
     }
 
     private void saveSpecification(BigDecimal gpa, String languageType, Integer languageScore,
-                                   Integer awardCount, String project, String portfolio) {
+                                   Integer awardCount, String project) {
         Specification specification = specificationRepository.findByUserId(CURRENT_USER_ID)
                 .orElseGet(() -> Specification.builder().userId(CURRENT_USER_ID).build());
-        specification.update(gpa, MAX_GPA, languageType, languageScore, awardCount, project, portfolio);
+        specification.update(gpa, MAX_GPA, languageType, languageScore, awardCount, project, project);
         specificationRepository.save(specification);
     }
 
@@ -107,8 +106,7 @@ public class ProfileAnalysisService {
             Integer languageScore,
             List<String> certifications,
             Integer awardCount,
-            String project,
-            String portfolio
+            String project
     ) {
         return AiProfileAnalysisResponse.UserProfile.builder()
                 .name(DEFAULT_USER_NAME)
@@ -124,7 +122,6 @@ public class ProfileAnalysisService {
                         .build())
                 .awardCount(awardCount)
                 .project(project)
-                .portfolio(portfolio)
                 .build();
     }
 
@@ -186,18 +183,18 @@ public class ProfileAnalysisService {
 
     private AiProfileAnalysisResponse.AiAnalysis fallbackAnalysis(AiProfileAnalysisResponse.UserProfile userProfile) {
         boolean hasProject = hasText(userProfile.getProject());
-        boolean hasPortfolio = hasText(userProfile.getPortfolio());
         return AiProfileAnalysisResponse.AiAnalysis.builder()
                 .strengths(List.of(resolveStrength(userProfile)))
-                .weaknesses(List.of(resolveWeakness(hasProject, hasPortfolio)))
-                .comment(resolveComment(hasProject, hasPortfolio))
+                .weaknesses(List.of(hasProject
+                        ? "프로젝트 설명에 사용 기술, 담당 역할, 성과를 더 구체적으로 작성하면 좋습니다."
+                        : "프로젝트 설명 보완 필요: 사용 기술, 담당 역할, 성과를 입력해 주세요."))
+                .comment(hasProject
+                        ? "현재 프로필은 백엔드/데이터 직무 지원에 활용하기 좋은 구성을 가지고 있습니다. 프로젝트에서 사용 기술, 담당 역할, 성과를 구체적으로 보완하면 더 좋은 평가를 받을 수 있습니다."
+                        : "프로젝트 설명 보완 필요: 프로젝트에서 사용 기술, 담당 역할, 성과를 추가하면 더 좋은 평가를 받을 수 있습니다.")
                 .build();
     }
 
     private String resolveStrength(AiProfileAnalysisResponse.UserProfile userProfile) {
-        if (hasText(userProfile.getPortfolio())) {
-            return "포트폴리오를 통해 프로젝트 경험과 직무 역량을 함께 설명할 수 있습니다.";
-        }
         if (userProfile.getGpa().compareTo(BigDecimal.valueOf(3.5)) >= 0) {
             return "학점이 준수합니다.";
         }
@@ -206,26 +203,6 @@ public class ProfileAnalysisService {
                     + " 보유로 기본 개발 역량을 확인할 수 있습니다.";
         }
         return "입력된 프로필을 기준으로 취업 준비 상태를 점검할 수 있습니다.";
-    }
-
-    private String resolveWeakness(boolean hasProject, boolean hasPortfolio) {
-        if (!hasProject) {
-            return "프로젝트 설명 보완 필요: 사용 기술, 담당 역할, 성과를 입력해 주세요.";
-        }
-        if (!hasPortfolio) {
-            return "포트폴리오 설명 보완 필요: 프로젝트 결과물, 링크, 구성, 본인 기여도를 입력해 주세요.";
-        }
-        return "프로젝트와 포트폴리오 설명에 사용 기술, 담당 역할, 성과를 더 구체적으로 작성하면 좋습니다.";
-    }
-
-    private String resolveComment(boolean hasProject, boolean hasPortfolio) {
-        if (!hasProject) {
-            return "프로젝트 설명 보완 필요: 프로젝트에서 사용 기술, 담당 역할, 성과를 추가하면 더 좋은 평가를 받을 수 있습니다.";
-        }
-        if (!hasPortfolio) {
-            return "포트폴리오 설명 보완 필요: 프로젝트 결과물, 배포 링크, 본인 기여도를 추가하면 더 좋은 평가를 받을 수 있습니다.";
-        }
-        return "현재 프로필은 백엔드/데이터 직무 지원에 활용하기 좋은 구성을 가지고 있습니다. 프로젝트와 포트폴리오에서 사용 기술, 담당 역할, 성과를 구체적으로 보완하면 더 좋은 평가를 받을 수 있습니다.";
     }
 
     private boolean hasText(String value) {

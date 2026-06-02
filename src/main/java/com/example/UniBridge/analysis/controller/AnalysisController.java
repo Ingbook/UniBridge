@@ -49,7 +49,7 @@ public class AnalysisController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청, 스펙 미등록, 존재하지 않는 기업 또는 동문")
     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     public BaseResponse<GapAnalysisResponse> analyzeGap(@RequestBody GapAnalysisRequest request) {
-        return BaseResponse.success("AI Gap 분석이 완료되었습니다.", gapAnalysisService.analyzeGap(request));
+        return BaseResponse.success("AI Gap Analysis 성공", gapAnalysisService.analyzeGap(request));
     }
 
     @PostMapping("/profile")

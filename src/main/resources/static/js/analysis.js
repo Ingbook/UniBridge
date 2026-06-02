@@ -25,11 +25,11 @@ let myProfile = {};
 
 const loadingMessages = [
     "AI 분석 기능은 현재 테스트 개발 단계로, 다소 시간이 소요될 수 있습니다.",
-    "프로필 로딩 중...",
-    "잠깐 커피 한 잔?",
-    "당신의 엄청난 포트폴리오를 분석 중...",
+    "사용자의 프로필을 분석 중이에요.",
+    "하루에 커피 한 잔은 일의 능률을 올려줘요.",
     "아직도 안 끝났다고???",
-    "AI 분석 점수 산출 중..."
+    "AI가 프로필을 분석한 점수를 산출 중이에요.",
+    "Zzzzzz....."
 ];
 let messageInterval;
 
@@ -84,14 +84,21 @@ function truncateText(text, maxLength) {
 }
 
 function profileRows(profile) {
+    const languageType = profile.languageType ?? profile.language?.type;
+    const languageScore = profile.languageScore ?? profile.language?.score;
+    const certificationNames = profile.certificationNames ?? profile.certifications?.items ?? [];
+    const certificationCount = profile.certificationCount ?? profile.certifications?.count ?? certificationNames.length;
+    const projectSummary = profile.projectSummary ?? profile.project;
+    const portfolioDescription = profile.portfolioDescription ?? profile.portfolio;
+
     return [
         ['이름', profile.name || '-'],
         ['학점', `${profile.gpa ?? '-'} / ${profile.maxGpa ?? '-'}`],
-        ['어학성적', `${profile.languageType ?? '-'} ${profile.languageScore ?? '-'}`],
-        ['자격증', formatCertificationProfile(profile)],
+        ['어학성적', `${languageType ?? '-'} ${languageScore ?? '-'}`],
+        ['자격증', formatCertificationProfile({certificationNames, certificationCount})],
         ['수상경력', `${profile.awardCount ?? 0}개`],
-        ['프로젝트', truncateText(profile.projectSummary, 20)],
-        ['포트폴리오', truncateText(profile.portfolioDescription, 20) || profile.portfolioLevel || '-']
+        ['프로젝트', truncateText(projectSummary, 20)],
+        ['포트폴리오', truncateText(portfolioDescription, 20) || profile.portfolioLevel || '-']
     ];
 }
 
@@ -112,6 +119,11 @@ function formatCertificationNames(names, count) {
 }
 
 function renderProfile(container, profile) {
+    if (!container) return;
+    if (!profile) {
+        container.innerHTML = '';
+        return;
+    }
     container.innerHTML = profileRows(profile)
         .map(([label, value]) => `
             <div class="analysis-spec-row">
@@ -233,32 +245,34 @@ function setLoading() {
 function renderAnalysis(data) {
     const score = data.overallScore ?? data.totalScore ?? 0;
     const summary = data.summarized ?? data.summary ?? '';
-    const selectedProfile = data.selectedAlumnusProfile ?? data.alumnusProfile;
+    const currentProfile = data.currentUser ?? data.userProfile;
+    const selectedProfile = data.selectedAlumnus ?? data.selectedAlumnusProfile ?? data.alumnusProfile;
     const items = data.gapItems ?? data.comparisonItems ?? [];
+    const detail = data.overallComment ?? data.detailAnalysis ?? {};
     totalScore.textContent = score;
     scoreMeter.style.width = `${score}%`;
     scoreDescription.textContent = data.scoreDescription;
     analysisSummary.textContent = summary;
     
-    if(data.userProfile) {
-        renderProfile(userProfile, data.userProfile);
+    if(currentProfile) {
+        renderProfile(userProfile, currentProfile);
     }
 
     renderProfile(alumnusProfile, selectedProfile);
     comparisonItems.innerHTML = items.map(item => `
         <div class="analysis-comparison-item">
             <div>
-                <span>${item.displayName || categoryLabels[item.category] || item.category}</span>
+                <span>${item.label || item.displayName || categoryLabels[item.category] || item.category || '-'}</span>
                 <strong>${item.score ?? item.aiScore}점</strong>
             </div>
-            <p>${truncateText(item.userValue, 20)} → ${truncateText(item.alumnusValue, 20)}</p>
-            <small>${item.comment ?? item.gapDescription}</small>
+            <p>${truncateText(item.currentValue ?? item.userValue, 20)} → ${truncateText(item.alumnusValue, 20)}</p>
+            <small>${item.comment ?? item.message ?? item.gapDescription}</small>
             <em>${item.status}</em>
         </div>
     `).join('');
-    renderList(strengthList, data.detailAnalysis?.strengths);
-    renderList(weaknessList, data.detailAnalysis?.weaknesses);
-    renderList(commentList, data.detailAnalysis?.comments);
+    renderList(strengthList, detail.strengths);
+    renderList(weaknessList, detail.weaknesses);
+    renderList(commentList, detail.comments ?? (detail.aiComment ? [detail.aiComment] : []));
 }
 
 if (editProfileBtn) {

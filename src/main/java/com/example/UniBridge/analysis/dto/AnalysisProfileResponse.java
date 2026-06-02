@@ -10,6 +10,7 @@ public class AnalysisProfileResponse {
 
     private String name;
     private BigDecimal gpa;
+    private BigDecimal maxGpa;
     private LanguageValue language;
     private CertificationValue certifications;
     private Integer awardCount;

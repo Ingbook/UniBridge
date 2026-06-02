@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 public class GapAnalysisResponse {
 
+    private Integer overallScore;
     private AnalysisProfileResponse currentUser;
     private AnalysisProfileResponse selectedAlumnus;
     private List<GapItemResponse> gapItems;

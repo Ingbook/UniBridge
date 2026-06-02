@@ -85,6 +85,7 @@ public class GapAnalysisService {
         FieldCommentsResponse fieldComments = createFieldComments(gapItems);
 
         return GapAnalysisResponse.builder()
+                .overallScore(scoreResult.overallScore())
                 .currentUser(toProfileResponse(userProfile))
                 .selectedAlumnus(toProfileResponse(alumnusProfile))
                 .gapItems(gapItems)
@@ -251,6 +252,7 @@ public class GapAnalysisService {
         return AnalysisProfileResponse.builder()
                 .name(defaultText(profile.getName(), ""))
                 .gpa(profile.getGpa())
+                .maxGpa(profile.getMaxGpa())
                 .language(languageValue(profile))
                 .certifications(certificationValue(profile))
                 .awardCount(safeCount(profile.getAwardCount()))

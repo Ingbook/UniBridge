@@ -31,7 +31,6 @@ public class AiProfileAnalysisResponse {
         private Certifications certifications;
         private Integer awardCount;
         private String project;
-        private String portfolio;
     }
 
     @Getter

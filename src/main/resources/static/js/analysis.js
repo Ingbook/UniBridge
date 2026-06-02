@@ -39,18 +39,14 @@ function updateCarousel() {
 }
 
 function profileRows(profile) {
-    const language = profile.language || {};
-    const certifications = profile.certifications || {};
-    const certificationItems = certifications.items || [];
-    const certificationCount = certifications.count ?? certificationItems.length;
     return [
         ['이름', profile.name],
-        ['학점', profile.gpa ?? '-'],
-        ['어학성적', `${language.type ?? '-'} ${language.score ?? '-'}`],
-        ['자격증', formatCertificationNames(certificationItems, certificationCount) || `총 ${certificationCount}개`],
+        ['학점', `${profile.gpa ?? '-'} / ${profile.maxGpa ?? '-'}`],
+        ['어학성적', `${profile.languageType ?? '-'} ${profile.languageScore ?? '-'}`],
+        ['자격증', formatCertificationProfile(profile)],
         ['수상경력', `${profile.awardCount ?? 0}개`],
-        ['프로젝트', profile.project || '-'],
-        ['포트폴리오', profile.portfolio || '-']
+        ['프로젝트', profile.projectSummary || '-'],
+        ['포트폴리오', profile.portfolioDescription || profile.portfolioLevel || '-']
     ];
 }
 
@@ -150,31 +146,30 @@ function setLoading() {
 }
 
 function renderAnalysis(data) {
-    const items = data.gapItems ?? [];
-    const score = items.length === 0
-        ? 0
-        : Math.round(items.reduce((sum, item) => sum + (item.score ?? 0), 0) / items.length);
+    const score = data.overallScore ?? data.totalScore ?? 0;
     const summary = data.summarized ?? data.summary ?? '';
+    const selectedProfile = data.selectedAlumnusProfile ?? data.alumnusProfile;
+    const items = data.gapItems ?? data.comparisonItems ?? [];
     totalScore.textContent = score;
     scoreMeter.style.width = `${score}%`;
     scoreDescription.textContent = data.scoreDescription;
     analysisSummary.textContent = summary;
-    renderProfile(userProfile, data.currentUser);
-    renderProfile(alumnusProfile, data.selectedAlumnus);
+    renderProfile(userProfile, data.userProfile);
+    renderProfile(alumnusProfile, selectedProfile);
     comparisonItems.innerHTML = items.map(item => `
         <div class="analysis-comparison-item">
             <div>
-                <span>${item.label}</span>
-                <strong>${item.score}점</strong>
+                <span>${item.displayName || categoryLabels[item.category] || item.category}</span>
+                <strong>${item.score ?? item.aiScore}점</strong>
             </div>
-            <p>${item.displayText}</p>
-            <small>${item.message}</small>
+            <p>${item.userValue} → ${item.alumnusValue}</p>
+            <small>${item.comment ?? item.gapDescription}</small>
             <em>${item.status}</em>
         </div>
     `).join('');
-    renderList(strengthList, data.overallComment?.strengths);
-    renderList(weaknessList, data.overallComment?.weaknesses);
-    renderList(commentList, data.overallComment?.aiComment ? [data.overallComment.aiComment] : []);
+    renderList(strengthList, data.detailAnalysis?.strengths);
+    renderList(weaknessList, data.detailAnalysis?.weaknesses);
+    renderList(commentList, data.detailAnalysis?.comments);
 }
 
 prevBtn.addEventListener('click', () => {

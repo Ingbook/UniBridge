@@ -8,20 +8,12 @@ import lombok.Getter;
 @Builder
 public class GapAnalysisResponse {
 
-    private Long companyId;
-    private String companyName;
-    private Long selectedAlumnusId;
-    private String selectedAlumnusName;
-    private String targetJobRole;
-    private Integer overallScore;
-    private Integer totalScore;
+    private AnalysisProfileResponse currentUser;
+    private AnalysisProfileResponse selectedAlumnus;
+    private List<GapItemResponse> gapItems;
+    private FieldCommentsResponse fieldComments;
+    private OverallCommentResponse overallComment;
     private String scoreDescription;
     private String summarized;
     private String summary;
-    private SpecProfileResponse userProfile;
-    private SpecProfileResponse selectedAlumnusProfile;
-    private SpecProfileResponse alumnusProfile;
-    private List<ComparisonItemResponse> gapItems;
-    private List<ComparisonItemResponse> comparisonItems;
-    private AiDetailAnalysisResponse detailAnalysis;
 }

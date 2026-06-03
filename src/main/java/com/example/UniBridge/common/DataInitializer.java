@@ -4,7 +4,6 @@ import com.example.UniBridge.alumnus.Alumnus;
 import com.example.UniBridge.alumnus.AlumnusRepository;
 import com.example.UniBridge.company.Company;
 import com.example.UniBridge.company.CompanyRepository;
-import com.example.UniBridge.specification.entity.Specification;
 import com.example.UniBridge.specification.repository.SpecificationRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ public class DataInitializer {
 
         @Override
         public void run(String... args) {
-            saveDefaultSpecification();
             if (companyRepository.count() != 0) {
                 companyRepository.findAll().forEach(this::saveDefaultAlumni);
                 return;
@@ -107,46 +105,6 @@ public class DataInitializer {
                     company("NovaPlatform", "Platform", "Product Backend Developer", 89)
             ));
             companies.forEach(this::saveDefaultAlumni);
-        }
-
-        private void saveDefaultSpecification() {
-            specificationRepository.findByUserId(1L)
-                    .ifPresentOrElse(this::fillDefaultSpecificationDetails,
-                            () -> specificationRepository.save(Specification.builder()
-                                    .userId(1L)
-                                    .gpa(new BigDecimal("3.8"))
-                                    .maxGpa(new BigDecimal("4.5"))
-                                    .languageType("TOEIC")
-                                    .languageScore(850)
-                                    .awardCount(1)
-                                    .projectSummary("AI 기반 취업 분석 서비스 개발")
-                                    .portfolioDescription("AI 기반 취업 분석 서비스 개발 포트폴리오")
-                                    .build()));
-        }
-
-        private void fillDefaultSpecificationDetails(Specification specification) {
-            Integer awardCount = specification.getAwardCount() == null ? 1 : specification.getAwardCount();
-            String languageType = hasText(specification.getLanguageType()) ? specification.getLanguageType() : "TOEIC";
-            Integer languageScore = specification.getLanguageScore() == null ? 850 : specification.getLanguageScore();
-            String projectSummary = hasText(specification.getProjectSummary())
-                    ? specification.getProjectSummary()
-                    : "AI 기반 취업 분석 서비스 개발";
-            String portfolioDescription = hasText(specification.getPortfolioDescription())
-                    ? specification.getPortfolioDescription()
-                    : "AI 기반 취업 분석 서비스 개발 포트폴리오";
-            if (!awardCount.equals(specification.getAwardCount())
-                    || !languageType.equals(specification.getLanguageType())
-                    || !languageScore.equals(specification.getLanguageScore())
-                    || !projectSummary.equals(specification.getProjectSummary())
-                    || !portfolioDescription.equals(specification.getPortfolioDescription())) {
-                specification.update(specification.getGpa(), specification.getMaxGpa(), languageType, languageScore, awardCount,
-                        projectSummary, portfolioDescription);
-                specificationRepository.save(specification);
-            }
-        }
-
-        private boolean hasText(String value) {
-            return value != null && !value.trim().isEmpty();
         }
 
         private void saveDefaultAlumni(Company company) {

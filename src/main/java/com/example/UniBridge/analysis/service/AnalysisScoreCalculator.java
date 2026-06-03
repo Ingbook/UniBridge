@@ -16,23 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AnalysisScoreCalculator {
 
-    public static final Set<String> ALLOWED_CERTIFICATIONS = Set.of(
-            "정보처리기사",
-            "SQLD",
-            "ADsP",
-            "AWS Cloud Practitioner",
-            "리눅스마스터 2급",
-            "컴퓨터활용능력 1급"
-    );
     public static final String DESCRIPTION_FALLBACK = "설명 보완 필요";
-    private static final Map<String, String> CERTIFICATION_CANONICAL_NAMES = Map.of(
-            normalizeCertificationKey("정보처리기사"), "정보처리기사",
-            normalizeCertificationKey("SQLD"), "SQLD",
-            normalizeCertificationKey("ADsP"), "ADsP",
-            normalizeCertificationKey("AWS Cloud Practitioner"), "AWS Cloud Practitioner",
-            normalizeCertificationKey("리눅스마스터 2급"), "리눅스마스터 2급",
-            normalizeCertificationKey("컴퓨터활용능력 1급"), "컴퓨터활용능력 1급"
-    );
 
     private static final List<CategoryWeight> WEIGHTS = List.of(
             new CategoryWeight("GPA", "학점", 30),
@@ -69,7 +53,7 @@ public class AnalysisScoreCalculator {
         return names.stream()
                 .filter(this::hasText)
                 .flatMap(name -> Arrays.stream(name.split("[,/]")))
-                .map(this::canonicalCertificationName)
+                .map(String::trim)
                 .filter(this::hasText)
                 .distinct()
                 .toList();
@@ -176,7 +160,7 @@ public class AnalysisScoreCalculator {
 
     private String formatCertificationValue(List<String> names) {
         if (names == null || names.isEmpty()) {
-            return "인정 자격증 0개";
+            return "0개";
         }
         int displayLimit = 3;
         String displayedNames = String.join(", ", names.stream()
@@ -186,15 +170,15 @@ public class AnalysisScoreCalculator {
         if (remainingCount > 0) {
             displayedNames += " 외 %d개".formatted(remainingCount);
         }
-        return "%s / 인정 자격증 %d개".formatted(displayedNames, names.size());
+        return "%s / 총 %d개".formatted(displayedNames, names.size());
     }
 
     private String competitiveComment(String category, double userValue, double alumnusValue) {
         if ("CERTIFICATION".equals(category) && userValue > alumnusValue) {
-            return "사용자가 선택 동문보다 인정 자격증을 더 많이 보유하고 있습니다.";
+            return "사용자가 선택 동문보다 자격증을 더 많이 보유하고 있습니다.";
         }
         if ("CERTIFICATION".equals(category) && userValue == alumnusValue) {
-            return "선택 동문과 비슷한 수준의 인정 자격증을 보유하고 있습니다.";
+            return "선택 동문과 비슷한 수준의 자격증을 보유하고 있습니다.";
         }
         return "선택 동문 기준과 비교해 충분히 경쟁력 있는 항목입니다.";
     }
@@ -204,7 +188,7 @@ public class AnalysisScoreCalculator {
         return switch (category) {
             case "GPA" -> "선택 동문보다 %.1f점 낮습니다.".formatted(gap);
             case "LANGUAGE" -> "선택 동문보다 %d점 낮습니다.".formatted(Math.round(gap));
-            case "CERTIFICATION" -> "선택 동문보다 인정 자격증 수가 부족해 보완이 필요합니다.";
+            case "CERTIFICATION" -> "선택 동문보다 자격증 수가 부족해 보완이 필요합니다.";
             case "AWARD" -> "선택 동문보다 수상경력이 %d개 부족해 보완이 필요합니다.".formatted(Math.round(gap));
             case "PROJECT" -> "선택 동문보다 프로젝트 설명 경쟁력이 낮아 보완이 필요한 항목입니다.";
             case "PORTFOLIO" -> "선택 동문보다 포트폴리오 설명 경쟁력이 낮아 보완이 필요한 항목입니다.";
@@ -276,17 +260,6 @@ public class AnalysisScoreCalculator {
 
     private String defaultText(String value, String defaultValue) {
         return hasText(value) ? value.trim() : defaultValue;
-    }
-
-    private String canonicalCertificationName(String value) {
-        return CERTIFICATION_CANONICAL_NAMES.get(normalizeCertificationKey(value));
-    }
-
-    private static String normalizeCertificationKey(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replaceAll("\\s+", "").toLowerCase(Locale.ROOT);
     }
 
     private boolean hasText(String value) {

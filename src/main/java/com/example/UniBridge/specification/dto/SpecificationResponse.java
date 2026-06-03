@@ -2,6 +2,7 @@ package com.example.UniBridge.specification.dto;
 
 import com.example.UniBridge.specification.entity.Specification;
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,8 +19,10 @@ public class SpecificationResponse {
     private Integer awardCount;
     private String projectSummary;
     private String portfolioDescription;
+    private List<String> certificationNames;
+    private Integer certificationCount;
 
-    public static SpecificationResponse from(Specification specification) {
+    public static SpecificationResponse from(Specification specification, List<String> certificationNames) {
         return SpecificationResponse.builder()
                 .specificationId(specification.getId())
                 .userId(specification.getUserId())
@@ -30,6 +33,8 @@ public class SpecificationResponse {
                 .awardCount(specification.getAwardCount())
                 .projectSummary(specification.getProjectSummary())
                 .portfolioDescription(specification.getPortfolioDescription())
+                .certificationNames(certificationNames)
+                .certificationCount(certificationNames.size())
                 .build();
     }
 }

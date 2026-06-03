@@ -79,7 +79,7 @@ public class GapAnalysisService {
         AnalysisScoreCalculator.AnalysisScoreResult scoreResult = analysisScoreCalculator.calculate(
                 userProfile, alumnusProfile);
         OllamaGapAnalysisResult aiResult = analyzeWithOllama(company, request.getTargetJobRole(),
-                userProfile, alumnusProfile);
+                userProfile, alumnusProfile, scoreResult);
         aiResult = normalizeResult(aiResult, userProfile, alumnusProfile);
         List<GapItemResponse> gapItems = createGapItems(scoreResult, aiResult, userProfile, alumnusProfile);
         FieldCommentsResponse fieldComments = createFieldComments(gapItems);
@@ -90,8 +90,12 @@ public class GapAnalysisService {
                 .gapItems(gapItems)
                 .fieldComments(fieldComments)
                 .overallComment(createOverallComment(aiResult, scoreResult))
+                .companyId(company.getId())
+                .companyName(company.getName())
+                .selectedAlumnusId(alumnus.getId())
+                .targetJobRole(hasText(request.getTargetJobRole()) ? request.getTargetJobRole() : alumnus.getJobRole())
+                .overallScore(scoreResult.overallScore())
                 .scoreDescription(defaultText(aiResult.getScoreDescription(), scoreResult.scoreDescription()))
-                .summarized(scoreResult.summarized())
                 .summary(defaultText(aiResult.getSummary(), scoreResult.summarized()))
                 .build();
     }
@@ -160,13 +164,14 @@ public class GapAnalysisService {
 
     private OllamaGapAnalysisResult analyzeWithOllama(Company company, String targetJobRole,
                                                       SpecProfileResponse userProfile,
-                                                      SpecProfileResponse alumnusProfile) {
+                                                      SpecProfileResponse alumnusProfile,
+                                                      AnalysisScoreCalculator.AnalysisScoreResult scoreResult) {
         try {
             return ollamaGapAnalysisClient.analyze(createPrompt(company, targetJobRole, userProfile, alumnusProfile));
         } catch (Exception e) {
             log.warn("Ollama gap analysis failed. companyId={}, targetJobRole={}, reason={}",
                     company.getId(), targetJobRole, e.getMessage(), e);
-            return fallbackResult(userProfile, alumnusProfile);
+            return fallbackResult(userProfile, alumnusProfile, scoreResult);
         }
     }
 
@@ -302,7 +307,7 @@ public class GapAnalysisService {
                 .displayText("%s → %s".formatted(currentValue, alumnusValue))
                 .score(aiItem == null || aiItem.getAiScore() == null
                         ? scoreItem.getScore()
-                        : clamp(aiItem.getAiScore(), 0, 100))
+                        : clamp(aiItem.getAiScore()))
                 .status(aiItem == null ? scoreItem.getStatus() : normalizeStatus(aiItem.getStatus()))
                 .message(defaultText(message, "%s 항목은 선택 동문 기준으로 비교가 필요합니다."
                         .formatted(DISPLAY_NAMES.getOrDefault(category, category))))
@@ -392,7 +397,7 @@ public class GapAnalysisService {
             case "LANGUAGE" -> "어학성적은 글로벌 업무 가능성과 기본 성실성을 보여줄 수 있습니다. 목표 기업 기준에 맞춰 점수 향상 여부를 점검해 주세요.";
             case "CERTIFICATION" -> certificationComment(userProfile);
             case "AWARD" -> "수상경력은 프로젝트 결과물의 객관적인 성과를 보여주는 요소입니다. 공모전, 해커톤, 교내 경진대회 참여를 통해 보완할 수 있습니다.";
-            case "PROJECT" -> "현재 프로젝트 주제는 좋지만, 단순 개발 경험보다 배포 여부, 사용자 입력 처리, 데이터 분석 방식, AI 분석 로직 등을 구체적으로 설명하는 것이 필요합니다.";
+            case "PROJECT" -> "현재 프로젝트 주제는 좋지만, 단순 개발 경험보다 배포 여부, 사용자 입력 처리, 데이터 분석 방식, AI 분석 로직 등을 구체적으로 설명하는 가장 강력한 무기입니다.";
             case "PORTFOLIO" -> "포트폴리오에는 프로젝트 개요, 사용 기술, 담당 역할, 문제 해결 과정, GitHub 링크, 배포 링크, 결과 화면을 포함하는 것이 좋습니다.";
             default -> message;
         };
@@ -409,15 +414,18 @@ public class GapAnalysisService {
 
     private OllamaGapAnalysisResult normalizeResult(OllamaGapAnalysisResult result, SpecProfileResponse userProfile,
                                                     SpecProfileResponse alumnusProfile) {
+        // We removed the fallback call here since it was moved to analyzeWithOllama
         if (result == null) {
-            return fallbackResult(userProfile, alumnusProfile);
+             log.error("AI Analysis result is null after processing");
+             return createMinimalResult();
         }
         if (result.getItems() == null || result.getItems().isEmpty()) {
-            result.setItems(fallbackResult(userProfile, alumnusProfile).getItems());
-        }
-        result.setItems(result.getItems().stream()
+             log.warn("AI Analysis items are empty");
+        } else {
+            result.setItems(result.getItems().stream()
                 .map(this::normalizeItem)
                 .toList());
+        }
         return result;
     }
 
@@ -447,26 +455,36 @@ public class GapAnalysisService {
                 .userValue(valueFor(category, userProfile))
                 .alumnusValue(valueFor(category, alumnusProfile))
                 .gapDescription(defaultText(item.getGapDescription(), "AI 분석 기준으로 비교가 필요합니다."))
-                .aiScore(clamp(item.getAiScore() == null ? 50 : item.getAiScore(), 0, 100))
+                .aiScore(clamp(item.getAiScore() == null ? 50 : item.getAiScore()))
                 .status(normalizeStatus(item.getStatus()))
                 .build();
     }
+    
+    private OllamaGapAnalysisResult createMinimalResult() {
+         OllamaGapAnalysisResult result = new OllamaGapAnalysisResult();
+         result.setScoreDescription("AI 분석 모델 응답 오류");
+         result.setSummary("AI가 응답을 생성하지 못했습니다. 서버 관리자에게 문의하세요.");
+         return result;
+    }
 
     private OllamaGapAnalysisResult fallbackResult(SpecProfileResponse userProfile,
-                                                   SpecProfileResponse alumnusProfile) {
+                                                   SpecProfileResponse alumnusProfile,
+                                                   AnalysisScoreCalculator.AnalysisScoreResult scoreResult) {
         OllamaGapAnalysisResult result = new OllamaGapAnalysisResult();
-        result.setTotalScore(60);
-        result.setScoreDescription("AI 분석을 완료하지 못해 기본 비교 안내를 제공합니다.");
-        result.setSummary("Ollama 연결 또는 응답 해석에 실패했습니다. 동문 스펙과의 차이를 참고해 보완해 주세요.");
+        result.setTotalScore(scoreResult.overallScore());
+        
+        // Pass the actual calculated descriptions instead of the hardcoded AI prompt text
+        result.setScoreDescription(scoreResult.scoreDescription());
+        result.setSummary("AI 서버 오류로 정량 분석 결과만 제공됩니다: " + scoreResult.summarized());
+        
         result.setItems(CATEGORIES.stream()
                 .map(category -> fallbackItem(category, userProfile, alumnusProfile))
                 .toList());
-        result.setStrengths(List.of("현재 입력된 스펙을 기준으로 직무 관련 경험을 정리할 수 있습니다."));
-        result.setWeaknesses(List.of("AI 상세 판단을 완료하지 못했습니다.", "점수가 낮은 Gap 항목부터 보완해 주세요."));
+        result.setStrengths(List.of("서버 기반 정량 점수 산출 완료."));
+        result.setWeaknesses(List.of("AI 모델 서버 타임아웃 또는 응답 오류.", "상세 분석 불가."));
         result.setComments(List.of(
-                "현재는 기본 안내 메시지를 제공합니다.",
-                "Ollama 서버와 모델 설정을 확인한 뒤 다시 분석해 주세요.",
-                "프로젝트 성과, 사용 기술, 문제 해결 과정을 구체적으로 입력하면 분석 품질이 좋아집니다."
+                "Ollama 서버가 연결되지 않거나 올바른 JSON을 반환하지 않았습니다.",
+                "현재 제공된 점수는 자체 서버 알고리즘에 기반한 정량 분석 점수입니다."
         ));
         return result;
     }
@@ -477,7 +495,7 @@ public class GapAnalysisService {
         item.setCategory(category);
         item.setUserValue(valueFor(category, userProfile));
         item.setAlumnusValue(valueFor(category, alumnusProfile));
-        item.setGapDescription("AI 분석 실패로 정량 차이만 참고해 주세요.");
+        item.setGapDescription("AI 상세 비교 실패. 정량 수치를 참고하세요.");
         item.setAiScore(50);
         item.setStatus(ComparisonStatus.NEEDS_IMPROVEMENT.name());
         return item;
@@ -522,9 +540,8 @@ public class GapAnalysisService {
             case "LANGUAGE", "Language" -> "LANGUAGE";
             case "CERTIFICATION", "Certifications", "Certification" -> "CERTIFICATION";
             case "AWARD", "Awards", "Award" -> "AWARD";
-            case "PROJECT", "Project" -> "PROJECT";
+            case "PROJECT", "Project", "PROJECT_PORTFOLIO", "ProjectPortfolio", "Project_Portfolio" -> "PROJECT";
             case "PORTFOLIO", "Portfolio" -> "PORTFOLIO";
-            case "PROJECT_PORTFOLIO", "ProjectPortfolio", "Project_Portfolio" -> "PROJECT";
             default -> null;
         };
     }
@@ -573,8 +590,8 @@ public class GapAnalysisService {
         return value != null && !value.isBlank();
     }
 
-    private int clamp(Integer value, int min, int max) {
-        int safeValue = value == null ? min : value;
-        return Math.max(min, Math.min(max, safeValue));
+    private int clamp(Integer value) {
+        int safeValue = value == null ? 0 : value;
+        return Math.max(0, Math.min(100, safeValue));
     }
 }

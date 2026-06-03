@@ -52,7 +52,7 @@
     <section class="analysis-hero-grid">
         <article class="analysis-profile-card">
             <div class="analysis-company-art" aria-hidden="true">
-                <img th:if="${companyName}" th:src="@{/images/{name}.png(name=${companyName})}" th:alt="${companyName} + ' 로고'" onerror="this.style.display='none'">
+                <img id="companyLogoImg" th:if="${companyName}" th:src="@{/images/logo_{name}.png(name=${#strings.toLowerCase(companyName)})}" th:alt="${companyName} + ' 로고'" onerror="this.onerror=null; this.src='/images/cat-cat-cat-cat.jpeg';">
             </div>
             <span>기업 로고</span>
         </article>

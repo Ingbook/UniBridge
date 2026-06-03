@@ -35,6 +35,7 @@ public class CompanyHomeDto {
             case "DeepVision" -> "/images/logo_deepvision.png";
             case "QuantumSoft" -> "/images/logo_quantumsoft.png";
             case "NovaPlatform" -> "/images/logo_novaplatform.png";
+            case "AIWorks" -> "/images/logo_aiworks.png";
             default -> "/images/cat-cat-cat-cat.jpeg"; // Default logo
         };
     }

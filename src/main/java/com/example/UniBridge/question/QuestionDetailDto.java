@@ -33,7 +33,7 @@ public class QuestionDetailDto {
                 .writerName(question.getWriterName())
                 .viewCount(question.getViewCount())
                 .createdAt(question.getCreatedAt())
-                .votes(question.getViewCount() / 2) // Fake it till you make it <- gemini wrote this? What the hell
+                .votes(question.getVotes() != null ? question.getVotes() : 0)
                 .answers(answers)
                 .build();
     }

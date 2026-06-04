@@ -129,12 +129,12 @@
                 </p>
 
                 <div class="board-thread-actions">
-                    <button class="board-vote-button" type="button" aria-label="Upvote">
+                    <button class="board-vote-button" type="button" aria-label="Upvote" th:attr="data-question-id=${question.id}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="m12 5 7 7h-4v7H9v-7H5z"></path>
                         </svg>
-                        <span th:text="${question.viewCount != null ? question.viewCount : 0}">0</span>
+                        <span th:text="${question.votes != null ? question.votes : 0}">0</span>
                     </button>
                 </div>
             </article>
@@ -163,5 +163,69 @@
         </nav>
     </div>
 </footer>
+<style>
+    .board-vote-button.voted {
+        color: #6a0dad; /* Purple */
+    }
+    .board-vote-button.voted svg {
+        fill: #6a0dad;
+    }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const voteButtons = document.querySelectorAll('.board-vote-button');
+    voteButtons.forEach(button => {
+        const questionId = button.getAttribute('data-question-id');
+        const storageKey = `voted_question_${questionId}`;
+        let isVoted = localStorage.getItem(storageKey) === 'true';
+
+        if (isVoted) {
+            button.classList.add('voted');
+        }
+
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (this.disabled) return;
+
+            this.disabled = true;
+            const voteCountSpan = this.querySelector('span');
+            const newVotedState = !isVoted;
+
+            fetch(`/api/questions/${questionId}/vote?isUpvote=${newVotedState}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network error');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const voteData = data.data || data;
+                if (voteData && voteData.votes !== undefined) {
+                    voteCountSpan.textContent = voteData.votes;
+                    isVoted = newVotedState;
+                    this.classList.toggle('voted', isVoted);
+                    if (isVoted) {
+                        localStorage.setItem(storageKey, 'true');
+                    } else {
+                        localStorage.removeItem(storageKey);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다.');
+            })
+            .finally(() => {
+                this.disabled = false;
+            });
+        });
+    });
+});
+</script>
 </body>
 </html>

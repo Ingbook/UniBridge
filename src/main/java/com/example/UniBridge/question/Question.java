@@ -41,6 +41,7 @@ public class Question {
     private String content;
     private String writerName;
     private Integer viewCount;
+    private Integer votes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -52,6 +53,7 @@ public class Question {
         this.content = content;
         this.writerName = writerName;
         this.viewCount = 0;
+        this.votes = 0;
     }
 
     public void update(Company company, String category, String title, String content) {
@@ -63,6 +65,14 @@ public class Question {
 
     public void increaseViewCount() {
         this.viewCount = this.viewCount == null ? 1 : this.viewCount + 1;
+    }
+
+    public void incrementVotes() {
+        this.votes = this.votes == null ? 1 : this.votes + 1;
+    }
+
+    public void decrementVotes() {
+        this.votes = (this.votes == null || this.votes <= 0) ? 0 : this.votes - 1;
     }
 
     @PrePersist

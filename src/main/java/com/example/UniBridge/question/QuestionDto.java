@@ -15,6 +15,7 @@ public class QuestionDto {
     private String content;
     private String writerName;
     private Integer viewCount;
+    private Integer votes;
 
     public static QuestionDto from(Question question) {
         return QuestionDto.builder()
@@ -26,6 +27,7 @@ public class QuestionDto {
                 .content(question.getContent())
                 .writerName(question.getWriterName())
                 .viewCount(question.getViewCount())
+                .votes(question.getVotes())
                 .build();
     }
 }

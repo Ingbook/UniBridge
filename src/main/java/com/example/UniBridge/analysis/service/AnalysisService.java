@@ -10,7 +10,7 @@ import com.example.UniBridge.certification.repository.UserCertificationRepositor
 import com.example.UniBridge.company.Company;
 import com.example.UniBridge.company.CompanyRepository;
 import com.example.UniBridge.specification.entity.Specification;
-import com.example.UniBridge.specification.service.SpecificationService;
+import com.example.UniBridge.specification.repository.SpecificationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,7 +26,7 @@ public class AnalysisService {
     private static final Long CURRENT_USER_ID = 1L;
 
     private final AnalysisReportRepository analysisReportRepository;
-    private final SpecificationService specificationService;
+    private final SpecificationRepository specificationRepository;
     private final CompanyRepository companyRepository;
     private final UserCertificationRepository userCertificationRepository;
     private final LocalAiAnalysisService localAiAnalysisService;
@@ -37,7 +37,7 @@ public class AnalysisService {
             throw new IllegalArgumentException("기업 ID를 입력해 주세요.");
         }
 
-        Specification specification = specificationService.getMySpecificationEntityForAnalysis();
+        Specification specification = specificationRepository.findByUserId(CURRENT_USER_ID).orElse(new Specification(CURRENT_USER_ID));
         Company company = companyRepository.findById(request.getCompanyId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 기업입니다."));
         List<UserCertification> userCertifications = userCertificationRepository.findByUserId(CURRENT_USER_ID);
@@ -94,7 +94,10 @@ public class AnalysisService {
     public int calculateGpaScore(Specification specification) {
         BigDecimal gpa = specification.getGpa();
         BigDecimal maxGpa = specification.getMaxGpa();
-        validateGpa(gpa, maxGpa);
+        
+        if (gpa == null || maxGpa == null || maxGpa.signum() <= 0) {
+            return 0; // Return 0 if GPA is missing, instead of throwing an error
+        }
 
         int score = gpa.divide(maxGpa, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100))
@@ -186,20 +189,5 @@ public class AnalysisService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
-    }
-
-    private void validateGpa(BigDecimal gpa, BigDecimal maxGpa) {
-        if (gpa == null) {
-            throw new IllegalArgumentException("학점을 입력해 주세요.");
-        }
-        if (maxGpa == null || maxGpa.signum() <= 0) {
-            throw new IllegalArgumentException("최대 학점은 0보다 커야 합니다.");
-        }
-        if (gpa.signum() < 0) {
-            throw new IllegalArgumentException("학점은 0 이상이어야 합니다.");
-        }
-        if (gpa.compareTo(maxGpa) > 0) {
-            throw new IllegalArgumentException("학점은 최대 학점보다 클 수 없습니다.");
-        }
     }
 }

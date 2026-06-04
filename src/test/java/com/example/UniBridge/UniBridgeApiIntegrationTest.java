@@ -86,12 +86,13 @@ class UniBridgeApiIntegrationTest {
     void boardPage_rendersCompanyNavigationAndPopularView() throws Exception {
         mockMvc.perform(get("/board"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Company Q&amp;A board")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("질문 게시판")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("최근 올라온 질문")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("c/TechCorp")));
 
         mockMvc.perform(get("/board").param("sort", "popular"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Popular questions")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("추천이 많은 질문")));
 
         mockMvc.perform(get("/board/{companyId}", 1L))
                 .andExpect(status().isOk())

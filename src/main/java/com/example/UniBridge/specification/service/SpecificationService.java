@@ -1,13 +1,19 @@
 package com.example.UniBridge.specification.service;
 
-import com.example.UniBridge.specification.dto.SpecificationRequest;
+import com.example.UniBridge.certification.entity.Certification;
+import com.example.UniBridge.certification.entity.UserCertification;
+import com.example.UniBridge.certification.repository.CertificationRepository;
+import com.example.UniBridge.certification.repository.UserCertificationRepository;
+import com.example.UniBridge.specification.dto.ProfileEditDto;
 import com.example.UniBridge.specification.dto.SpecificationResponse;
 import com.example.UniBridge.specification.entity.Specification;
 import com.example.UniBridge.specification.repository.SpecificationRepository;
-import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,57 +22,68 @@ public class SpecificationService {
     private static final Long CURRENT_USER_ID = 1L;
 
     private final SpecificationRepository specificationRepository;
+    private final UserCertificationRepository userCertificationRepository;
+    private final CertificationRepository certificationRepository;
 
     @Transactional(readOnly = true)
     public SpecificationResponse getMySpecification() {
-        return SpecificationResponse.from(getMySpecificationEntity());
-    }
+        Specification spec = specificationRepository.findByUserId(CURRENT_USER_ID)
+                .orElse(new Specification(CURRENT_USER_ID));
 
-    @Transactional
-    public SpecificationResponse saveMySpecification(SpecificationRequest request) {
-        validateGpa(request.getGpa(), request.getMaxGpa());
+        List<String> certificationNames = userCertificationRepository.findByUserId(CURRENT_USER_ID)
+                .stream()
+                .map(userCert -> userCert.getCertification().getName())
+                .collect(Collectors.toList());
 
-        Specification specification = specificationRepository.findByUserId(CURRENT_USER_ID)
-                .orElseGet(() -> Specification.builder().userId(CURRENT_USER_ID).build());
-        specification.update(request.getGpa(), request.getMaxGpa(),
-                keepExistingWhenNull(request.getAwardCount(), specification.getAwardCount()),
-                keepExistingWhenNull(request.getProjectSummary(), specification.getProjectSummary()),
-                keepExistingWhenNull(request.getPortfolioDescription(), specification.getPortfolioDescription()));
-
-        return SpecificationResponse.from(specificationRepository.save(specification));
-    }
-
-    public void validateGpa(BigDecimal gpa, BigDecimal maxGpa) {
-        if (gpa == null) {
-            throw new IllegalArgumentException("학점을 입력해 주세요.");
-        }
-        if (maxGpa == null || maxGpa.signum() <= 0) {
-            throw new IllegalArgumentException("최대 학점은 0보다 커야 합니다.");
-        }
-        if (gpa.signum() < 0) {
-            throw new IllegalArgumentException("학점은 0 이상이어야 합니다.");
-        }
-        if (gpa.compareTo(maxGpa) > 0) {
-            throw new IllegalArgumentException("학점은 최대 학점보다 클 수 없습니다.");
-        }
+        return SpecificationResponse.from(spec, certificationNames);
     }
 
     @Transactional(readOnly = true)
-    public Specification getMySpecificationEntityForAnalysis() {
-        return specificationRepository.findByUserId(CURRENT_USER_ID)
-                .orElseThrow(() -> new IllegalArgumentException("분석을 진행하려면 먼저 학점 정보를 등록해야 합니다."));
+    public ProfileEditDto getProfileForEdit() {
+        Specification spec = specificationRepository.findByUserId(CURRENT_USER_ID)
+                .orElse(new Specification(CURRENT_USER_ID)); // Create a new one if it doesn't exist
+
+        List<Long> certificationIds = userCertificationRepository.findByUserId(CURRENT_USER_ID)
+                .stream()
+                .map(userCert -> userCert.getCertification().getId())
+                .collect(Collectors.toList());
+
+        return ProfileEditDto.from(spec, certificationIds);
     }
 
-    private Specification getMySpecificationEntity() {
-        return specificationRepository.findByUserId(CURRENT_USER_ID)
-                .orElseThrow(() -> new IllegalArgumentException("등록된 스펙 정보가 없습니다."));
-    }
+    @Transactional
+    public void saveOrUpdateProfile(ProfileEditDto dto) {
+        Specification spec = specificationRepository.findByUserId(CURRENT_USER_ID)
+                .orElseGet(() -> {
+                    Specification newSpec = Specification.builder().userId(CURRENT_USER_ID).build();
+                    return specificationRepository.save(newSpec);
+                });
 
-    private String keepExistingWhenNull(String requestedValue, String existingValue) {
-        return requestedValue == null ? existingValue : requestedValue;
-    }
+        spec.update(
+                dto.getGpa(),
+                dto.getMaxGpa(),
+                "TOEIC", // Hardcoded as per previous request
+                dto.getLanguageScore(),
+                dto.getAwardCount(),
+                dto.getProjectSummary(),
+                dto.getPortfolioDescription()
+        );
+        specificationRepository.save(spec);
 
-    private Integer keepExistingWhenNull(Integer requestedValue, Integer existingValue) {
-        return requestedValue == null ? existingValue : requestedValue;
+        // Handle certifications
+        userCertificationRepository.deleteByUserId(CURRENT_USER_ID);
+        if (dto.getCertificationIds() != null && !dto.getCertificationIds().isEmpty()) {
+            List<UserCertification> userCerts = dto.getCertificationIds().stream()
+                    .map(certId -> {
+                        Certification certification = certificationRepository.findById(certId)
+                                .orElseThrow(() -> new IllegalArgumentException("Invalid certification ID: " + certId));
+                        return UserCertification.builder()
+                                .userId(CURRENT_USER_ID)
+                                .certification(certification)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+            userCertificationRepository.saveAll(userCerts);
+        }
     }
 }

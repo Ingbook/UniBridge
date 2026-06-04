@@ -8,7 +8,8 @@ import static org.mockito.Mockito.when;
 
 import com.example.UniBridge.alumnus.Alumnus;
 import com.example.UniBridge.alumnus.AlumnusRepository;
-import com.example.UniBridge.analysis.dto.ComparisonItemResponse;
+import com.example.UniBridge.analysis.dto.FieldComment;
+import com.example.UniBridge.analysis.dto.GapItemResponse;
 import com.example.UniBridge.analysis.dto.GapAnalysisRequest;
 import com.example.UniBridge.analysis.dto.GapAnalysisResponse;
 import com.example.UniBridge.analysis.dto.OllamaGapAnalysisResult;
@@ -58,7 +59,8 @@ class GapAnalysisServiceTest {
                 companyRepository,
                 alumnusRepository,
                 userCertificationRepository,
-                ollamaGapAnalysisClient
+                ollamaGapAnalysisClient,
+                new AnalysisScoreCalculator()
         );
     }
 
@@ -123,23 +125,30 @@ class GapAnalysisServiceTest {
 
         GapAnalysisResponse response = gapAnalysisService.analyzeGap(request(1L, 1L, "Backend Developer"));
 
-        assertThat(response.getCompanyId()).isEqualTo(1L);
-        assertThat(response.getCompanyName()).isEqualTo("TechCorp");
-        assertThat(response.getTargetJobRole()).isEqualTo("Backend Developer");
-        assertThat(response.getTotalScore()).isEqualTo(82);
-        assertThat(response.getSummary())
-                .isEqualTo("직무 관련 자격증과 프로젝트 경험은 있으나, 동문 대비 수상경력과 어학성적 보완이 필요합니다.");
-        assertThat(response.getUserProfile().getGpa()).isEqualByComparingTo("3.8");
-        assertThat(response.getUserProfile().getCertificationCount()).isEqualTo(2);
-        assertThat(response.getUserProfile().getCertificationNames()).containsExactly("정보처리기사", "SQLD");
-        assertThat(response.getAlumnusProfile().getLanguageScore()).isEqualTo(960);
-        assertThat(response.getAlumnusProfile().getCertificationNames())
-                .containsExactly("정보처리기사", "SQLD", "ADsP", "AWS Cloud Practitioner", "컴퓨터활용능력");
-        assertThat(response.getComparisonItems()).hasSize(5);
-        assertThat(response.getDetailAnalysis().getStrengths()).contains("직무와 연결되는 프로젝트 경험이 있습니다.");
-        assertThat(response.getDetailAnalysis().getWeaknesses())
+        assertThat(response.getCurrentUser().getName()).isEqualTo("현재 사용자");
+        assertThat(response.getCurrentUser().getGpa()).isEqualByComparingTo("3.8");
+        assertThat(response.getCurrentUser().getCertifications().getItems()).containsExactly("정보처리기사", "SQLD");
+        assertThat(response.getCurrentUser().getCertifications().getCount()).isEqualTo(2);
+        assertThat(response.getSelectedAlumnus().getName()).isEqualTo("James Kim");
+        assertThat(response.getSelectedAlumnus().getLanguage().getScore()).isEqualTo(960);
+        assertThat(response.getSelectedAlumnus().getCertifications().getItems())
+                .containsExactly("정보처리기사", "SQLD", "ADsP", "AWS Cloud Practitioner");
+        assertThat(response.getScoreDescription()).isEqualTo("상위 동문 평균과 가까운 준비도입니다.");
+        assertThat(response.getSummarized()).contains("AI 기반 취업 분석 서비스 개발");
+        assertThat(response.getSummary()).isEqualTo("직무 관련 자격증과 프로젝트 경험은 있으나, 동문 대비 수상경력과 어학성적 보완이 필요합니다.");
+        assertThat(response.getGapItems()).hasSize(6);
+        assertThat(response.getGapItems())
+                .extracting(GapItemResponse::getField)
+                .containsExactly("gpa", "language", "certifications", "awardCount", "project", "portfolio");
+        assertThat(response.getFieldComments().getName().getMessage()).isNotBlank();
+        assertFixedFieldComments(response);
+        assertThat(findItem(response, "project").getDisplayText())
+                .isEqualTo("AI 기반 취업 분석 서비스 개발 → 실서비스 배포 경험과 데이터 기반 추천 프로젝트 보유");
+        assertThat(findItem(response, "project").getComment()).isNotBlank();
+        assertThat(response.getOverallComment().getStrengths()).contains("직무와 연결되는 프로젝트 경험이 있습니다.");
+        assertThat(response.getOverallComment().getWeaknesses())
                 .contains("프로젝트 성과와 배포 경험 설명을 더 구체화할 필요가 있습니다.");
-        assertThat(response.getDetailAnalysis().getComments()).hasSize(3);
+        assertThat(response.getOverallComment().getAiComment()).contains("현재 스펙은 기본 경쟁력을 갖추고 있습니다.");
     }
 
     @Test
@@ -162,54 +171,74 @@ class GapAnalysisServiceTest {
                 .contains("\"certificationCount\":2")
                 .contains("\"certificationNames\":[\"정보처리기사\",\"SQLD\"]")
                 .contains("\"awardCount\":1")
-                .contains("\"certificationCount\":5")
-                .contains("\"certificationNames\":[\"정보처리기사\",\"SQLD\",\"ADsP\",\"AWS Cloud Practitioner\",\"컴퓨터활용능력\"]")
+                .contains("\"certificationCount\":4")
+                .contains("\"certificationNames\":[\"정보처리기사\",\"SQLD\",\"ADsP\",\"AWS Cloud Practitioner\"]")
                 .contains("\"awardCount\":3")
                 .contains("CERTIFICATION은 자격증 이름과 목표 직무 관련성을 반드시 함께 평가한다")
                 .contains("AWARD는 수상 개수를 기준으로 비교한다");
     }
 
     @Test
+    void analyzeGap_throwsException_whenUserCertificationIsNotAllowed() {
+        Company company = company();
+        when(specificationService.getMySpecificationEntityForAnalysis()).thenReturn(specification());
+        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+        when(alumnusRepository.findByCompanyIdAndId(1L, 1L)).thenReturn(Optional.of(alumnus(company)));
+        when(userCertificationRepository.findByUserId(1L)).thenReturn(List.of(
+                userCertification("네트워크관리사")
+        ));
+
+        assertThatThrownBy(() -> gapAnalysisService.analyzeGap(request(1L, 1L, "Backend Developer")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("입력 가능한 자격증은 정보처리기사, SQLD, ADsP, AWS Cloud Practitioner, 리눅스마스터 2급, 컴퓨터활용능력 1급입니다.");
+    }
+
+    @Test
     void analyzeGap_mapsAwardCountToComparisonItemValue() {
         GapAnalysisResponse response = analyzeSuccessfully(specification());
 
-        ComparisonItemResponse awardItem = findItem(response, "AWARD");
+        GapItemResponse awardItem = findItem(response, "awardCount");
 
-        assertThat(awardItem.getDisplayName()).isEqualTo("수상경력");
-        assertThat(awardItem.getUserValue()).isEqualTo("1개");
+        assertThat(awardItem.getLabel()).isEqualTo("수상경력");
+        assertThat(awardItem.getCurrentValue()).isEqualTo("1개");
         assertThat(awardItem.getAlumnusValue()).isEqualTo("3개");
-        assertThat(awardItem.getAiScore()).isEqualTo(65);
+        assertThat(awardItem.getDisplayText()).isEqualTo("1개 → 3개");
+        assertThat(awardItem.getScore()).isEqualTo(65);
+        assertThat(awardItem.getMessage()).isNotBlank();
+        assertThat(awardItem.getComment()).isNotBlank();
     }
 
     @Test
     void analyzeGap_usesActualProjectSummary_whenProjectSummaryExists() {
         GapAnalysisResponse response = analyzeSuccessfully(specification("AI 기반 취업 분석 서비스 개발", "실제 포트폴리오 설명"));
 
-        assertThat(response.getUserProfile().getProjectSummary()).isEqualTo("AI 기반 취업 분석 서비스 개발");
-        assertThat(response.getUserProfile().getPortfolioDescription()).isEqualTo("실제 포트폴리오 설명");
-        assertThat(findItem(response, "PROJECT_PORTFOLIO").getUserValue())
+        assertThat(response.getCurrentUser().getProject()).isEqualTo("AI 기반 취업 분석 서비스 개발");
+        assertThat(response.getCurrentUser().getPortfolio()).isEqualTo("실제 포트폴리오 설명");
+        assertThat(findItem(response, "project").getCurrentValue())
                 .isEqualTo("AI 기반 취업 분석 서비스 개발");
+        assertThat(findItem(response, "portfolio").getCurrentValue())
+                .isEqualTo("실제 포트폴리오 설명");
     }
 
     @Test
     void analyzeGap_usesProjectFallbackOnlyWhenProjectSummaryIsBlank() {
         GapAnalysisResponse response = analyzeSuccessfully(specification(" ", null));
 
-        assertThat(response.getUserProfile().getProjectSummary()).isEqualTo("설명 보완 필요");
-        assertThat(response.getUserProfile().getPortfolioDescription()).isEqualTo("설명 보완 필요");
-        assertThat(findItem(response, "PROJECT_PORTFOLIO").getUserValue()).isEqualTo("설명 보완 필요");
+        assertThat(response.getCurrentUser().getProject()).isEqualTo("설명 보완 필요");
+        assertThat(response.getCurrentUser().getPortfolio()).isEqualTo("설명 보완 필요");
+        assertThat(findItem(response, "project").getCurrentValue()).isEqualTo("설명 보완 필요");
+        assertThat(findItem(response, "portfolio").getCurrentValue()).isEqualTo("설명 보완 필요");
     }
 
     @Test
     void analyzeGap_mapsUppercaseCategoriesWithoutMissingScores() {
         GapAnalysisResponse response = analyzeSuccessfully(specification());
 
-        assertThat(findItem(response, "CERTIFICATION").getAiScore()).isEqualTo(70);
-        assertThat(findItem(response, "AWARD").getAiScore()).isEqualTo(65);
-        assertThat(findItem(response, "PROJECT_PORTFOLIO").getAiScore()).isEqualTo(80);
-        assertThat(response.getComparisonItems())
-                .extracting(ComparisonItemResponse::getCategory)
-                .containsExactly("GPA", "LANGUAGE", "CERTIFICATION", "AWARD", "PROJECT_PORTFOLIO");
+        assertThat(findItem(response, "certifications").getScore()).isBetween(0, 100);
+        assertThat(findItem(response, "awardCount").getScore()).isBetween(0, 100);
+        assertThat(findItem(response, "project").getScore()).isBetween(0, 100);
+        assertThat(findItem(response, "portfolio").getScore()).isBetween(0, 100);
+        assertFixedFieldComments(response);
     }
 
     @Test
@@ -223,10 +252,10 @@ class GapAnalysisServiceTest {
 
         GapAnalysisResponse response = gapAnalysisService.analyzeGap(request(1L, 1L, "Backend Developer"));
 
-        assertThat(response.getTotalScore()).isEqualTo(60);
-        assertThat(response.getComparisonItems()).hasSize(5);
-        assertThat(response.getDetailAnalysis().getWeaknesses()).contains("AI 상세 판단을 완료하지 못했습니다.");
-        assertThat(response.getSummary()).contains("Ollama 연결 또는 응답 해석에 실패했습니다.");
+        assertThat(response.getGapItems()).hasSize(6);
+        assertThat(response.getOverallComment().getWeaknesses()).contains("AI 상세 판단을 완료하지 못했습니다.");
+        assertThat(response.getSummary()).isNotBlank();
+        assertFixedFieldComments(response);
     }
 
     private GapAnalysisResponse analyzeSuccessfully(Specification specification) {
@@ -243,11 +272,27 @@ class GapAnalysisServiceTest {
         return gapAnalysisService.analyzeGap(request(1L, 1L, "Backend Developer"));
     }
 
-    private ComparisonItemResponse findItem(GapAnalysisResponse response, String category) {
-        return response.getComparisonItems().stream()
-                .filter(item -> category.equals(item.getCategory()))
+    private GapItemResponse findItem(GapAnalysisResponse response, String field) {
+        return response.getGapItems().stream()
+                .filter(item -> field.equals(item.getField()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private void assertFixedFieldComments(GapAnalysisResponse response) {
+        assertComment(response.getFieldComments().getName());
+        assertComment(response.getFieldComments().getGpa());
+        assertComment(response.getFieldComments().getLanguage());
+        assertComment(response.getFieldComments().getCertifications());
+        assertComment(response.getFieldComments().getAwardCount());
+        assertComment(response.getFieldComments().getProject());
+        assertComment(response.getFieldComments().getPortfolio());
+    }
+
+    private void assertComment(FieldComment comment) {
+        assertThat(comment.getLabel()).isNotBlank();
+        assertThat(comment.getMessage()).isNotBlank();
+        assertThat(comment.getComment()).isNotBlank();
     }
 
     private GapAnalysisRequest request(Long companyId, Long alumnusId, String targetJobRole) {

@@ -13,4 +13,7 @@ public interface UserCertificationRepository extends JpaRepository<UserCertifica
 
     @Transactional
     void deleteByUserIdAndCertificationId(Long userId, Long certificationId);
+
+    @Transactional
+    void deleteByUserId(Long userId);
 }

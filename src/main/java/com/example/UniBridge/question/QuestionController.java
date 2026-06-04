@@ -72,4 +72,15 @@ public class QuestionController {
         questionService.deleteQuestion(questionId);
         return BaseResponse.success(null);
     }
+
+    @PostMapping("/{questionId}/vote")
+    @Operation(summary = "질문 추천/취소", description = "질문 추천 상태를 토글합니다.")
+    @ApiResponse(responseCode = "200", description = "질문 추천 토글 성공")
+    @ApiResponse(responseCode = "400", description = "존재하지 않는 질문")
+    @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    public BaseResponse<QuestionDto> voteQuestion(
+            @PathVariable Long questionId,
+            @RequestParam(defaultValue = "true") boolean isUpvote) {
+        return BaseResponse.success(questionService.voteQuestion(questionId, isUpvote));
+    }
 }

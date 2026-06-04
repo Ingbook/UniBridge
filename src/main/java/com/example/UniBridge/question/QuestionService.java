@@ -78,6 +78,17 @@ public class QuestionService {
         questionRepository.delete(question);
     }
 
+    @Transactional
+    public QuestionDto voteQuestion(Long questionId, boolean isUpvote) {
+        Question question = getQuestionEntity(questionId);
+        if (isUpvote) {
+            question.incrementVotes();
+        } else {
+            question.decrementVotes();
+        }
+        return QuestionDto.from(question);
+    }
+
     @Transactional(readOnly = true)
     public Question getQuestionEntity(Long questionId) {
         return questionRepository.findById(questionId)

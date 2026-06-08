@@ -70,14 +70,25 @@ Only verified university members can access the platform.
 * Thymeleaf
 * HTML
 * CSS
+* JavaScript
 
 ### Development Tools
 
 * IntelliJ IDEA
 * Maven
-* Git
-* GitHub
+* gradle
+* Git by Github
 
+### AI Tools
+ [Coding Agent]
+* Google Gemini 3.1 Pro Preview
+* ChatGPT Codex (model: gpt-5.5 & gpt-5.4-mini
+
+ [Image Generation]
+* Gemini Nano Banana 2 (Gemini 3.1 Flash Image)
+
+ [AI Analysis Featuring Model)
+* Ollama (model: gemma3:1b)
 
 ---
 

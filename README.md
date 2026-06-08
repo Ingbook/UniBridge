@@ -1,60 +1,104 @@
-WE'RE FUCKING COOKED
+# UniBridge
 
-## User Profile Analysis API
+UniBridge is a university-exclusive career analytics platform designed to help students explore career paths, evaluate their competitiveness, and prepare for future employment opportunities using alumni data and AI-powered insights.
 
-`POST /api/analysis/profile`
+## Overview
 
-현재 사용자 프로필을 저장 또는 갱신하고, 입력값 기반 AI 분석 결과를 반환합니다. 응답은 공통 `BaseResponse` 형식인 `success`, `message`, `data` 구조를 사용합니다.
+Many students struggle to understand how to prepare for their desired careers because information about alumni outcomes, industry expectations, and skill requirements is often fragmented.
 
-Request:
+UniBridge aims to bridge that gap by providing:
 
-```json
-{
-  "gpa": 3.8,
-  "languageType": "TOEIC",
-  "languageScore": 850,
-  "certifications": ["정보처리기사", "SQLD"],
-  "awardCount": 1,
-  "project": "AI 기반 취업 분석 서비스 개발"
-}
-```
+* Alumni career path analysis
+* AI-based career competitiveness evaluation
+* Portfolio management
+* Career recommendation systems
+* Employment statistics and insights
+* Industry and company-specific guidance
 
-Response:
+Only verified university members can access the platform.
 
-```json
-{
-  "success": true,
-  "message": "사용자 프로필 분석이 완료되었습니다.",
-  "data": {
-    "userProfile": {
-      "name": "현재 사용자",
-      "gpa": 3.8,
-      "language": {
-        "type": "TOEIC",
-        "score": 850,
-        "displayText": "TOEIC 850"
-      },
-      "certifications": {
-        "items": ["정보처리기사", "SQLD"],
-        "count": 2
-      },
-      "awardCount": 1,
-      "project": "AI 기반 취업 분석 서비스 개발"
-    },
-    "aiAnalysis": {
-      "strengths": ["학점이 준수합니다."],
-      "weaknesses": ["프로젝트 설명이 더 구체적이면 좋습니다."],
-      "comment": "현재 프로필은 백엔드/데이터 직무 지원에 활용하기 좋은 구성을 가지고 있습니다."
-    }
-  }
-}
-```
+---
 
-Validation:
+## Core Features
 
-- `gpa`: `0.0` 이상 `4.5` 이하
-- `languageType`: 빈 문자열 불가
-- `languageScore`: 0보다 큰 숫자
-- `certifications`: `정보처리기사`, `SQLD`, `ADsP`, `AWS Cloud Practitioner`, `리눅스마스터 2급`, `컴퓨터활용능력 1급`만 허용
-- `awardCount`: 0 이상
-- `project`: 문자열이며, 빈 값이면 분석 결과에 프로젝트 설명 보완 안내가 포함됩니다.
+### Student Profiles
+
+* Student information management
+* Academic and career interests
+* Personal career tracking
+
+### Portfolio Management
+
+* Secure portfolio uploads
+* Portfolio storage and organization
+* Portfolio review preparation
+
+### Alumni Analytics
+
+* Alumni employment records
+* Career path visualization
+* Industry trend analysis
+
+### AI Career Analysis
+
+* Resume and portfolio analysis
+* Career readiness scoring
+* Personalized improvement recommendations
+
+### Search & Statistics
+
+* Alumni search and filtering
+* Employment statistics dashboard
+* Industry-specific insights
+
+---
+
+## Technology Stack
+
+### Backend
+
+* Java
+* Spring Boot
+* Spring MVC
+* Spring Data JPA
+* MySQL
+* Lombok
+* Swagger / OpenAPI
+
+### Frontend
+
+* Thymeleaf
+* HTML
+* CSS
+
+### Development Tools
+
+* IntelliJ IDEA
+* Maven
+* Git
+* GitHub
+
+
+---
+
+## Future Roadmap
+
+* Advanced AI career recommendations
+* Alumni networking features
+* Industry demand forecasting
+* Skill gap analysis
+* Company-specific preparation guides
+* Data visualization dashboards
+* Internship recommendation system
+
+---
+
+## Development Team
+
+UniBridge is developed as a university software engineering project focused on helping students make informed career decisions through data and AI-driven insights.
+
+---
+
+## License
+
+This project is currently intended for academic and educational purposes.
